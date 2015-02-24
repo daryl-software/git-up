@@ -1,6 +1,23 @@
 git-up
 ======
 
+
+Table of Contents
+-----------------
+
+ * [What is it ?](#what-is-it-)
+ * [How ?](#how-)
+ * [Flow](#flow)
+ * [Why so many servers ?](#why-so-many-servers-)
+ * [Installation](#installation)
+   * [User side: install deployment tools](#user-side-install-deployment-tools)
+   * [Server side](#server-side)
+     * [Prerequisites](#prerequisites)
+ * [Usage](#usage)
+ * [Security](#security)
+ * [Tests](#tests)
+
+
 What is it ?
 ------------
 
