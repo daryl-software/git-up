@@ -124,7 +124,7 @@ Installation
 
 ### User side: install deployment tools
 
-`curl -sS https://github.com/ezweb/git-up | sh -- --install-dir=~/.git-up`
+`curl -sS https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -- --install-dir ~/.git-up`
 
 It will setup `git up` alias, and download scripts to `~/.git-up` folder.
 
@@ -147,6 +147,18 @@ Ansible roles are available to help you setup provisionning and destination serv
 - perl (python?)
 - rsync
 
+
+#### gitolite specific
+
+Login to your gitolite server and :
+```
+cd ~git
+git clone https://github.com/ezweb/git-up.git
+
+sed -r 's/^#? ?\$GL_ADC_PATH ?= (.+)/$GL_ADC_PATH = "git-up\/adc";/' .gitolite.rc 
+# OR
+vim .gitolite.rc # and change $GL_ADC_PATH to "git-up/adc"
+```
 
 Usage
 -----

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+set -e
+
+cd $( dirname $0 )
+
+while [ $# -gt 0 ]
+do
+	case "$1" in
+		test)
+			exit 0
+			shift
+			;;
+		autotag)
+			exec ../bin/autotag.pl
+			;;
+		*)
+			echo "You are not supposed to do that, go away !"
+			exit 42
+			;;
+	esac
+done

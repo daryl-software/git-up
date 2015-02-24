@@ -11,5 +11,321 @@
 [ "$1" = "--help" ] && { sed -n -e '/^# Usage:/,/^$/ s/^# \?//p' < $0; exit; }
 
 set -e
+shopt -s xpg_echo
 
-echo "$0 call with args: $@"
+
+# 
+# CONFIG
+#
+# Search git-up on those remotes :
+remotes="prod production origin"
+sshopts="-x -A"
+remote=
+sshhost=
+LANG=C
+
+# deprecated?
+hotfix=1
+release=0
+revertto=
+diff=0
+sshhost=
+reponame=
+ezgit="ez_git"
+prod=
+ppbranch=
+resync=
+
+# 
+# FUNCTIONS
+#
+error () {
+    echo "\033[41m\033[1;33mCRITICAL: $@\033[0m"
+	exit 42
+}
+
+check_prerequisites() {
+	for tool in ssh awk grep git
+	do
+		if ! type $tool >/dev/null
+		then
+			echo "FATAL: the tool '$tool' is required."
+			exit 2
+		fi
+	done
+}
+
+get_remote() {
+	for search in $remotes
+	do
+		if git remote show -n | grep -q "^$search$"
+		then
+			remote=$( git remote show -n "$search" | grep "Fetch URL" | awk '{print $3}' )
+			sshhost=${remote%%:*}
+			return
+		fi
+	done
+	error "Remote not found."
+}
+
+check_connection() {
+	echo "Trying to connect to $sshhost ..."
+	ssh $sshopts $sshhost up test
+}
+
+# ------------------------------
+
+config_ssh() {
+	local sshuser=$( git config --get ez.sshuser )
+	if [ -z "$sshuser" ]
+	then
+		echo "FATAL: not configured."
+		exit 4
+
+	elif [ "$sshuser" = "SYSTEM" ]
+	then
+		sshhost=$lab
+	else
+		sshhost="$sshuser@$lab"
+	fi
+}
+
+
+up_to_date() {
+	git fetch --quiet origin 
+}
+
+
+get_next_tag() {
+	local autotag
+	if type perl >/dev/null
+	then
+		autotag="perl $( dirname $0 )/autotag.pl"
+	else
+		echo "hint: install Perl for better performance ;)" >&2
+		autotag="ssh $sshopts $sshhost up autotag"
+	fi
+	if [ $hotfix -gt 0 ]
+	then
+		newtag=$( git tag -l | $autotag --nofetch --short )
+	elif [ $release -gt 0 ]
+	then
+		newtag=$( git tag -l | $autotag --nofetch --short --release )
+	fi
+}
+
+
+repo_name() {
+	if [ -z "$reponame" ]
+	then
+		reponame=$( git remote show -n origin | grep Fetch | cut -d":" -f3 )
+	fi
+	echo $reponame
+}
+
+
+fetch_info() {
+	if [ -z "$ppbranch" ]
+	then
+		config_ssh
+		infofile="$HOME/.ez.info.$$"
+		> $infofile
+		ssh -C $sshhost $ezgit --remote --project "$( repo_name )" info >$infofile
+		# TODO: gérer un pb de connexion ssh
+		. $infofile
+		rm -f $infofile
+	fi
+}
+
+
+check_branch() {
+	fetch_info
+	curbranch=$( git branch | grep '^*' | cut -d" " -f2 )
+	if [ -n "$curbranch" ] && [ -n "$ppbranch" ]
+	then
+		if [ "$curbranch" = "$ppbranch" ]
+		then
+			return 0
+		fi
+	fi
+	echo "ERROR: you are not in '$ppbranch'."
+	exit 6
+}
+
+
+resync() {
+	ssh -C $sshhost $ezgit --remote --project "$( repo_name )" sync $1
+}
+
+
+check_param_prod() {
+	if [ "$1" = "prod" ] || [ "$1" = "preprod" ]
+	then
+		return 0
+	fi
+	return 1
+}
+
+diff() {
+	diff=$1
+	shift
+	d1="HEAD"
+	if [ "$diffwith" = "preprod" ]
+	then
+		d2="origin/$ppbranch"
+	else
+		d1="origin/$ppbranch"
+		d2="$prod"
+	fi
+	echo "DIFF: $@ $d2..$d1"
+	echo "(debug: prod_commit_id=$phead with=$diffwith prodtag=$prod)"
+	echo "(debug: preprod_commit_id=$pphead)"
+	if [ $diff -eq 1 ]
+	then
+		git diff $@ $d2 $d1
+	elif [ $diff -eq 2 ]
+	then
+		git whatchanged --stat --format="%Cred author : %an --- %Cgreen date :  %ad" $@ $d2..$d1
+	elif [ $diff -eq 3 ]
+	then
+		git log --pretty=format:'%Cred%h%Creset -%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' $@ $d2..$d1
+	fi
+}
+
+
+gitopts=""
+# Traitement des options
+while [ $# -gt 0 ]
+do
+	case "$1" in
+		hotfix) # default ...
+			hotfix=1
+			release=0
+			shift
+			;;
+		release)
+			release=1
+			hotfix=0
+			shift
+			;;
+		revert)
+			release=0
+			hotfix=0
+			revertto=$2
+			shift
+			shift
+			;;
+		diff)
+			diff=1
+			shift
+			diffwith=$1
+			shift
+			;;
+		sync)
+			resync=$2
+			shift
+			shift
+			;;
+		whatchanged)
+			diff=2
+			shift
+			diffwith=$1
+			shift
+			;;
+		# git opts
+		-*)
+			gitopts="$gitopts $1"
+			shift
+			;;
+		*)
+			cat <<EOF
+Usage: git up [options]
+
+With options:
+    hotfix                  : quick hotfix
+    release                 : new release
+    revert prod    TOREF    : revert prod to TOREF
+    revert preprod TOREF    : revert preprod to TOREF
+    diff prod               : diff between prod and preprod
+    diff preprod            : diff between preprod and origin/master
+    whatchanged prod        : whatchanged between prod and preprod
+    whatchanged preprod     : whatchanged between preprod and origin/master
+    sync prod|preprod: re-sync prod or preprod
+
+TIPS:
+    hotfix -p               : params -* are passed to git log
+
+EOF
+			exit 1
+			;;
+	esac
+done
+
+check_prerequisites
+
+get_remote
+
+check_connection
+
+echo "wip..."; exit 12
+
+up_to_date
+
+fetch_info
+
+# DIFF / WHATCHANGED
+if [ $diff -gt 0 ]
+then
+	diff $diff
+
+# MISE EN PROD
+elif [ $hotfix -gt 0 -o $release -gt 0 ]
+then
+	check_branch
+
+	newtag=
+	get_next_tag
+	if [ -z "$newtag" ]
+	then
+		echo "An unexpected error occurred while computing next tag."
+		exit 2
+	fi
+
+	diff 3 $gitopts # whatchanged
+	echo
+	echo "|----------------------------------------------------"
+	echo "| Project: $( repo_name ) origin/$ppbranch $prod"
+	echo "|----------------------------------------------------"
+	echo
+	printf "Please validate this hotfix to {$newtag} [yYnN] : "
+	read proceed
+	if [ "$proceed" = "y" ] || [ "$proceed" = "Y" ] # || [ "$proceed" = "" ]
+	then
+		git tag $newtag && git push origin $newtag
+	else
+		echo "CANCELED."
+		exit 7
+	fi
+	exit 0
+elif [ -n "$revertto" ]
+then
+	if check_param_prod	
+	then
+		resync "$1"
+	else
+		exec $0 help # Usage
+	fi
+elif [ -n "$resync" ]
+then
+	if check_param_prod	
+	then
+		resync "$1"
+	else
+		exec $0 help # Usage
+	fi
+else
+	echo "Not yet implemented..."
+	exit 8
+fi
+
+
