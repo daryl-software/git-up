@@ -105,14 +105,22 @@ The "deliver server" is one of your production server. It can be a spare or a jo
 Installation
 ------------
 
-I choose [Ansible](http://www.ansible.com/) and you just have to add a role to your playbooks :
-- git-up-provision : to configure the provisionning server
-- git-up-deployable : for all your production servers
+### User side: install deployment tools
+
+`curl -sS https://github.com/ezweb/git-up | sh -- --install-dir=~/.git-up`
+
+It will setup `git up` alias, and download scripts to `~/.git-up` folder.
 
 
+### Server side
 
-Prerequisites
--------------
+We use [Ansible](http://www.ansible.com/) and you just have to add a role to your playbooks :
+- `git-up-provision` : to configure the provisionning server
+- `git-up-deployable` : for all your production servers
+
+If you use another orchestration tool, there is not so much to do.
+
+#### Prerequisites
 
 Developpers than know git, and the ones who have to deliver needs to know terminal and ssh.
 
@@ -122,6 +130,16 @@ Ansible roles are available to help you setup provisionning and destination serv
 - perl (python?)
 - rsync
 
+
+Usage
+-----
+
+- `git up <env> <commit-ish>` : default to env=preprod and commit-ish=origin/master
+
+Since we can't trigger post-receive hook when nothing is pushed, we can re-deploy this way:
+- `ssh <remote uri> up <env> <commit-ish>`
+However, to do that we need [ADCs](http://gitolite.com/gitolite/g2/ADCs.html) which is a feature only proposed by
+Gitolite. An [issue#213](https://github.com/gitlabhq/gitlab-shell/issues/213) is proposed on gitlab-shell.
 
 Security
 --------
