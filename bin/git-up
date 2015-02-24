@@ -1,0 +1,15 @@
+#!/bin/bash
+# Usage: git up [--force] [--check] <env> [commit-ish]
+# Deploy commit to production servers
+# --force		: ...
+# --check		: check before and display diff
+# --info		: get current working tree infos
+# 
+# https://github.com/ezweb/git-up
+
+
+[ "$1" = "--help" ] && { sed -n -e '/^# Usage:/,/^$/ s/^# \?//p' < $0; exit; }
+
+set -e
+
+echo "$0 call with args: $@"
