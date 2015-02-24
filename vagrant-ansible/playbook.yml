@@ -1,0 +1,11 @@
+---
+- hosts: all
+  gather_facts: yes
+
+  pre_tasks:
+  - name: APT | update and upgrade
+    apt: update-cache=yes upgrade=yes
+
+  roles:
+  - git-up-provision
+  - git-up-deployable

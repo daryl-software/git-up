@@ -1,0 +1,28 @@
+- name: APT | configure gitolite
+  debconf: name=gitolite question='gitolite/gituser' value={{ git_user }} vtype=string
+
+- name: APT | configure gitolite
+  debconf: name=gitolite question='gitolite/adminkey' value="{{ git_user_key }}" vtype=string
+
+- name: APT | check prerequisites
+  apt: pkg={{ item }} state=present
+  with_items:
+  - git
+  - rsync
+  - gitolite
+  - vim
+
+- fail: msg="WIP ..."
+
+- name: LOCAL | create private folder
+  local_action: file path=private/{{ git_user }} state=directory
+  sudo: false
+
+- name: USER | fetch ssh key
+  fetch: src={{ git_home }}/.ssh/{{ item }} dest=private/{{ git_user }}/ flat=yes
+  with_items:
+  - id_rsa
+  - id_rsa.pub
+
+#- name: GITOLITE | gitolite.rc patch
+  

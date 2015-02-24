@@ -1,0 +1,31 @@
+- name: USER | deploy group
+  group: name={{ deploy_user }} system=yes
+
+- name: USER | deploy user
+  user: name={{ deploy_user }} uid={{ deploy_uid }} group={{ deploy_group }} home={{ deploy_home }}
+    system=yes
+    createhome=yes
+    shell=/bin/bash
+
+- name: USER | fix permission
+  file: path={{ deploy_home }} owner={{ deploy_user }} group={{ deploy_group }} recurse=no
+
+- name: USER | authorized_key
+  authorized_key: user={{ deploy_user }} key="{{ item }}"
+  with_file:
+  - private/git/id_rsa.pub
+
+- name: DEST | check deploy folder
+  file: path={{ deploy_folder }} state=directory owner={{ deploy_user }} group={{ deploy_group }} recurse=no
+
+- name: APT | install rsync
+  apt: pkg=rsync state=present
+
+- name: RSYNC | modules config
+  template: src=rsyncd.conf dest=/etc/rsyncd.conf
+  notify: restart rsync
+
+- name: RSYNC | enable
+  replace: dest=/etc/default/rsync regexp="^RSYNC_ENABLE=.*" replace="RSYNC_ENABLE=true"
+  notify: restart rsync
+
