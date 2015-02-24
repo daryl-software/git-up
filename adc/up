@@ -13,8 +13,12 @@ do
 			shift
 			;;
 		autotag)
-			exec ../bin/autotag.pl
+			shift
+			exec ../bin/autotag.pl --nofetch --short $@
 			;;
+		update)
+			cd ..
+			exec git pull
 		*)
 			echo "You are not supposed to do that, go away !"
 			exit 42
