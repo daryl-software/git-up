@@ -19,6 +19,7 @@ do
 		update)
 			cd ..
 			exec git pull
+			;;
 		*)
 			echo "You are not supposed to do that, go away !"
 			exit 42
