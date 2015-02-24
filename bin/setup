@@ -1,7 +1,80 @@
 #!/bin/sh
+# Usage: setup [--install-dir folder] [--branch master]
 # Script to setup your global git configuration, to be able to use git-up
 # https://github.com/ezweb/git-up
 
+[ "$1" = "--help" ] && { sed -n -e '/^# Usage:/,/^$/ s/^# \?//p' < $0; exit; }
 set -e
 
-git config --global alias.up "!date -R"
+# 
+# CONFIG
+#
+installdir=~/.git-up
+gitupbaseurl=https://raw.githubusercontent.com/ezweb/git-up/
+branch=master
+
+
+while [ $# -gt 0 ]
+do
+	case "$1" in
+		--install-dir)
+			shift
+			if [ -n "$1" ]
+			then
+				installdir="$1"
+				shift
+			else
+				exec $0 --help
+			fi
+			;;
+		--branch)
+			shift
+			if [ -n "$1" ]
+			then
+				branch="$1"
+				shift
+			else
+				exec $0 --help
+			fi
+			;;
+		*)
+			shift
+			;;
+	esac
+done
+
+# check pre-requisites
+for tool in curl git
+do
+	if ! type $tool >/dev/null
+	then
+		echo "FATAL: the tool '$tool' is required."
+		exit 2
+	fi
+done
+
+echo ">> Install git-up to $installdir ..."
+if [ -d "$installdir" ]
+then
+	echo "WARNING: folder $installdir already exists, overwriting..."
+fi
+
+mkdir -p "$installdir"
+cd "$installdir"
+
+for script in git-up
+do
+	echo "- $script"
+	curl -o "$script" -# $gitupbaseurl$branch/bin/$script
+	chmod u+x "$script"
+done
+
+if type realpath >/dev/null
+then
+	installdir=`realpath $installdir`
+fi
+
+echo ">> Setup git alias 'up' ..."
+git config --global alias.up "!$installdir/git-up"
+
+echo ">> Done. You can 'git up something' now !"
