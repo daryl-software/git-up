@@ -62,7 +62,7 @@ fi
 mkdir -p "$installdir"
 cd "$installdir"
 
-for script in git-up
+for script in git-up autotag.pl
 do
 	echo "- $script"
 	curl -o "$script" -# $gitupbaseurl$branch/bin/$script
@@ -76,5 +76,6 @@ fi
 
 echo ">> Setup git alias 'up' ..."
 git config --global alias.up "!$installdir/git-up"
+#git config --global alias.prod "up prod"
 
 echo ">> Done. You can 'git up something' now !"

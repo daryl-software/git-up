@@ -2,27 +2,328 @@
 
 
 set -e
-
+shopt -s xpg_echo
 cd $( dirname $0 )
 
+postreceivehook="../../.gitolite/hooks/common/post-receive"
+repositories=
+provisiondir=
+repo=
+stage=
+commitish=
+confdir=../conf.d
+debug=0
+sync_to=
+
+
+# GIT INFOS
+chead=
+ctag=
+cpretty=
+gitdir=
+gitopts=
+NOREV="0000000000000000000000000000000000000000"
+
+
+error () {
+    echo "\033[41m\033[1;33mCRITICAL: $@\033[0m" >&2
+}
+
+warn () {
+	echo "\033[41m\033[1;33mWARNING: $@\033[0m" >&2
+}
+
+info () {
+	echo "\033[44m\033[1;36m$@\033[0m" >&2
+}
+
+msg () {
+	echo "\033[40m\033[1;36m$@\033[0m" >&2
+}
+
+msgy () { 
+    echo "\033[40m\033[1;33m$@\033[0m" >&2
+}
+
+debug() {
+	if [ $debug -gt 0 ]
+	then
+		echo "# DEBUG: [$( date -R )] <<< $@" >&2
+	fi
+}
+
+is_gitolite() {
+	if [ -n "$GL_USER" ]
+	then
+		return 0
+	fi
+	return 1
+}
+
+is_gitlab() {
+	getent passwd | grep -q gitlab
+	return $?
+}
+
+# From http://theoldschooldevops.com/2008/02/09/bash-ini-parser/
+cfg_parser ()
+{
+	ini="$(<$1)"
+	ini="${ini//[/\[}"          # escape [
+	ini="${ini//]/\]}"          # escape ]
+	IFS=$'\n' && ini=( ${ini} ) # convert to line-array
+	ini=( ${ini[*]//;*/} )      # remove comments with ;
+	ini=( ${ini[*]//#*/} )      # remove comments with #
+	ini=( ${ini[*]/\    =/=} )  # remove tabs before =
+	ini=( ${ini[*]/=\   /=} )   # remove tabs be =
+	ini=( ${ini[*]/\ =\ /=} )   # remove anything with a space around =
+	ini=( ${ini[*]/#\\[/\}$'\n'cfg.section.} ) # set section prefix
+	ini=( ${ini[*]/%\\]/ \(} )    # convert text2function (1)
+	ini=( ${ini[*]/=/=\( } )    # convert item to array
+	ini=( ${ini[*]/%/ \)} )     # close array parenthesis
+	ini=( ${ini[*]/%\\ \)/ \\} ) # the multiline trick
+	ini=( ${ini[*]/%\( \)/\(\) \{} ) # convert text2function (2)
+	ini=( ${ini[*]/%\} \)/\}} ) # remove extra parenthesis
+	ini[0]="" # remove first element
+	ini[${#ini[*]} + 1]='}'    # add the last brace
+	#debug "$(echo "${ini[*]}")"
+	eval "$(echo "${ini[*]}")" # eval the result
+}
+
+get_conf() {
+	# do not reparse every time
+	if ! type cfg.section.general >/dev/null 2>&1 
+	then
+		# Example: fetch or update config files
+		hook pre_conf
+		for conffile in default.ini organization.ini ${repo}.default.ini ${repo}.ini 
+		do
+			cnf=$confdir/$conffile
+			if [ -e $cnf ]
+			then
+				debug "Parse $cnf"
+				cfg_parser $cnf
+			fi
+		done
+		hook post_conf
+	fi
+}
+
+hook() {
+	if [ -n "$1" ]
+	then
+		local hookname="$1"
+		local hook=
+		# Can't get conf on pre_conf hook
+		if [ "$hookname" = "pre_conf" ]
+		then
+			hook="../hooks/pre_conf"
+		# any other hooks:
+		else
+			get_conf
+			cfg.section.hooks
+			hook="${!1}"
+		fi
+		debug "hook '$hookname' ?"
+		if [ -n "$hook" ]
+		then
+			if [ -x "$hook" ]
+			then
+				debug "Call hook: $hook"
+			else
+				debug "hook $1 => '$hook' : script not found."
+			fi
+		fi
+	fi
+}
+
+do_update() {
+	get_conf
+	cfg.section.general
+	debug "do auto-update: $do_auto_update_each"
+	if [ -n "$do_auto_update_each" ] && [ $do_auto_update_each -gt 0 ]
+	then
+		# TODO: flag + check last update
+		cd ..
+		debug "self-update"
+		hook pre_self_update
+		git pull
+		if is_gitolite
+		then
+			if diff -q hooks/post-receive $postreceivehook
+			then
+				echo "Updating gitolite post-receive hook."
+			#	cp -a hooks/post-receive $postreceivehook
+			fi
+		elif is_gitlab
+		then
+			warn "GITLAB is not yet supported."
+		fi
+		debug "self-update done."
+		hook post_self_update
+	else
+		error "auto-update is disabled"
+	fi
+	exit 0
+}
+
+setup_provision() {
+	if is_gitolite
+	then
+		repositories="$GL_REPO_BASE_ABS"
+		provisiondir="$GL_REPO_BASE_ABS/../provisioning/$stage"
+	elif is_gitlab
+	then
+		error "GITLAB is not yet supported."
+	else
+		provisiondir="../../provisioning/$stage"
+	fi
+	if [ ! -d "$provisiondir" ]
+	then
+		debug "mkdir $PWD/$provisiondir"
+		mkdir -p "$provisiondir"
+	fi
+
+	local cloned=0
+	if [ ! -d "$provisiondir/$repo" ]
+	then
+		msgy "Clone $repo, please wait ..."
+		if ! git clone -l -q $repositories/${repo}.git $provisiondir/$repo >&2
+		then
+			echo "# FATAL: unable to clone $repo."
+			exit 7
+		fi
+		cloned=1
+	fi
+	gitdir="$provisiondir/$repo"
+	export GIT_WORK_TREE="$gitdir"
+	export GIT_DIR="$gitdir/.git"
+	debug "git fetch"
+	git fetch --tags -q origin
+	debug "git fetch done."
+
+	# init on commitish
+	if [ $cloned -gt 0 ]
+	then
+		msg "Initialize to $commitish"
+		git checkout -q $commitish
+	fi
+
+	chead="$( git rev-parse HEAD )"
+	set +e
+	cabbrev="$( git rev-parse --abbrev-ref HEAD )"
+	debug "cabbrev=$cabbrev"
+	if [ "$cabbrev" != "HEAD" ]
+	then
+		cbranch="$cabbrev"
+		cpretty="$cbranch"
+	else
+		cpretty=$chead
+	fi
+	ctag="$( git describe --tags --exact-match $chead 2>/dev/null )"
+	if [ -n "$ctag" ]
+	then
+		cpretty="$ctag"
+	fi
+	debug "cpretty=$cpretty chead=$chead ctag='$ctag'"
+	set -e
+}
+
+do_infos() {
+	check_repo
+	setup_provision
+	get_conf
+
+	cfg.section.on_receive
+	if [ -n "$tag_stage" ] && [ "$tag_stage" = "$stage" ]
+	then
+		debug "Stage <$stage> is configured on tags."
+		echo "tag=1"
+		echo "tag_pattern='$tag_pattern'"
+	else
+		echo "tag=0"
+	fi
+
+	echo "chead='$chead'"
+	echo "ctag='$ctag'"
+	echo "cpretty='$cpretty'"
+}
+
+check_repo() {
+	if [ -z "$repo" ]
+	then
+		error "repository not found."
+		exit 6
+	fi
+	if [ -z "$stage" ]
+	then
+		error "stage not found."
+		exit 7
+	fi
+
+	get_conf
+	cfg.section.general
+	
+	for allowed_stage in ${allowed_stages[*]}
+	do
+		if [ "$stage" = "$allowed_stage" ]
+		then
+			return 0
+		fi
+	done
+	error "Stage <$stage> is not allowed."
+	exit 8
+}
+
+do_sync() {
+	info "Delivering $repo to $stage on $sync_to ..."
+	echo "WIP: step 2, deploy !" >&2
+}
+
+# 
+# MAIN
+#
 while [ $# -gt 0 ]
 do
 	case "$1" in
 		test)
 			exit 0
-			shift
 			;;
 		autotag)
 			shift
 			exec ../bin/autotag.pl --nofetch --short $@
 			;;
 		update)
-			cd ..
-			exec git pull
+			do_update
+			;;
+		infos)
+			do_infos
+			;;
+		sync)
+			shift
+			sync_to="$1"
+			do_sync
+			;;
+		--debug)
+			debug=1
+			debug "Call $0 $@"
+			;;
+		--init)
+			shift
+			commitish="$1"
 			;;
 		*)
-			echo "You are not supposed to do that, go away !"
-			exit 42
+			if [ -z "$repo" ]
+			then
+				repo="$1"
+			elif [ -z "$stage" ]
+			then
+				stage="$1"
+			else
+				echo "You are not supposed to do that, go away !"
+				exit 42
+			fi
 			;;
 	esac
+	shift
 done

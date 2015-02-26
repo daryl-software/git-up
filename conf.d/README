@@ -1,0 +1,7 @@
+Config files are read in this order, with overriding behavior :
+
+- default.ini
+- organization.ini
+- repository_name.default.ini
+- repository_name.ini
+

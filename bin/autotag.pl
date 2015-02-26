@@ -1,9 +1,9 @@
 #!/usr/bin/perl 
 #===============================================================================
 #
-#         FILE:  ez_git_autotag.pl
+#         FILE:  autotag.pl
 #
-#        USAGE:  ./ez_git_autotag.pl  
+#        USAGE:  ./autotag.pl  
 #
 #  DESCRIPTION:  auto-increment last tag
 #

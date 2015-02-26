@@ -1,2 +1,5 @@
+/conf.d/*.ini
+!/conf.d/*default*.ini
 /vagrant-provision/private
 /.vagrant
+*.swp
