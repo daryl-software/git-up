@@ -266,6 +266,9 @@ do
 		--help)
 			Usage
 			;;
+		help)
+			Usage
+			;;
 		--debug)
 			debug=1
 			upopts="--debug "

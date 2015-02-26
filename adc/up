@@ -235,7 +235,7 @@ do_infos() {
 	get_conf
 
 	cfg.section.on_receive
-	if [ -n "$tag_stage" ] && [ "$tag_stage" = "$stage" ]
+	if [ $tag_enabled -gt 0 ] && [ -n "$tag_stage" ] && [ "$tag_stage" = "$stage" ]
 	then
 		debug "Stage <$stage> is configured on tags."
 		echo "tag=1"
