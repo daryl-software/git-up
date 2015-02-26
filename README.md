@@ -124,7 +124,11 @@ Installation
 
 ### User side: install deployment tools
 
-`curl -sS https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -- --install-dir ~/.git-up`
+`curl -sS https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh`
+
+or if you want to install it to another folder :
+
+`curl -sS https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir ~/.git-up`
 
 It will setup `git up` alias, and download scripts to `~/.git-up` folder.
 
