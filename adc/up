@@ -130,9 +130,31 @@ hook() {
 			if [ -x "$hook" ]
 			then
 				debug "Call hook: $hook"
+				$hook $stage $repo
 			else
 				debug "hook $1 => '$hook' : script not found."
 			fi
+		fi
+	fi
+}
+
+local_hook() {
+	cfg.section.hooks
+	hook="$1"
+	if [ -n "$hook" ]
+	then
+		if [ -d "$gitdir" ]
+		then
+			if [ -x "$gitdir/$local_hooks_dir/$hook" ]
+			then
+				debug "Call hook: $hook"
+				# Call it inside a subshell
+				( cd "$gitdir" && $local_hooks_dir/$hook $stage $repo )
+			else
+				debug "hook $1 => '$local_hooks_dir/$hook' : script not found."
+			fi
+		else
+			warn "No gitdir ? WTF ?? [$gitdir]"
 		fi
 	fi
 }
@@ -168,6 +190,8 @@ do_update() {
 }
 
 setup_provision() {
+	check_repo
+	get_conf
 	if is_gitolite
 	then
 		repositories="$GL_REPO_BASE_ABS"
@@ -183,7 +207,12 @@ setup_provision() {
 		debug "mkdir $PWD/$provisiondir"
 		mkdir -p "$provisiondir"
 	fi
+	gitdir="$provisiondir/$repo"
+	export GIT_WORK_TREE="$gitdir"
+	export GIT_DIR="$gitdir/.git"
+}
 
+provision() {
 	local cloned=0
 	if [ ! -d "$provisiondir/$repo" ]
 	then
@@ -191,13 +220,10 @@ setup_provision() {
 		if ! git clone -l -q $repositories/${repo}.git $provisiondir/$repo >&2
 		then
 			echo "# FATAL: unable to clone $repo."
-			exit 7
+			exit 5
 		fi
 		cloned=1
 	fi
-	gitdir="$provisiondir/$repo"
-	export GIT_WORK_TREE="$gitdir"
-	export GIT_DIR="$gitdir/.git"
 	debug "git fetch"
 	git fetch --tags -q origin
 	debug "git fetch done."
@@ -227,12 +253,12 @@ setup_provision() {
 	fi
 	debug "cpretty=$cpretty chead=$chead ctag='$ctag'"
 	set -e
+
 }
 
 do_infos() {
-	check_repo
 	setup_provision
-	get_conf
+	provision
 
 	cfg.section.on_receive
 	if [ $tag_enabled -gt 0 ] && [ -n "$tag_stage" ] && [ "$tag_stage" = "$stage" ]
@@ -276,8 +302,34 @@ check_repo() {
 }
 
 do_sync() {
+	setup_provision
+	debug "Prepare to deploy ..."
+	cfg.section.deploy
+	if ! cfg.section.deploy-$stage 2>/dev/null
+	then
+		error "$repo didn't have $stage deployment configuration, or is not authorized to."
+		msgy "Hint: add a configuration file $confdir/${repo}.ini"
+		exit 9
+	fi
+
+	if [ ! -d "$gitdir" ]
+	then
+		error "WTF ? gitdir not found [$gitdir]"
+		exit 14
+	fi
+
+	local_hook "pre-deploy"
+
 	info "Delivering $repo to $stage on $sync_to ..."
-	echo "WIP: step 2, deploy !" >&2
+	debug "to_do_script
+	--repo=$repo
+	--stage=$stage
+	--source-dir=$gitdir
+	--rsync-module=$rsync_module
+	--rsync-user=$user
+	--master=$master
+	--servers=$servers"
+	msg ">>> WIP: step 2, deploy ! <<<"
 }
 
 # 
