@@ -301,6 +301,47 @@ check_repo() {
 	exit 8
 }
 
+# Can't use cfg_parser, it's not a real INI file ...
+parse_ansible_hostfile() {
+	local ansible=ansible
+	local hostfile="$1"
+	cfg.section.inventory
+	if [ -z "$ansible" ]
+	then
+		ansible="ansible" # took from $PATH
+	else
+		# quick hack...
+		if [ -z "$PYTHONPATH" ]
+		then
+			export PYTHONPATH="$( dirname $ansible )/../lib"
+			debug "PYTHONPATH=$PYTHONPATH"
+		fi
+	fi
+	debug "Call ansible: $ansible"
+	hosts=$( $ansible --inventory "$hostfile" --list-hosts $repo | awk '{print $1}' )
+
+	# master is first if not already setup
+	for h in $hosts
+	do
+		if [ -z "$master" ]
+		then
+			master=$h
+		else
+			if [ -z "$server" ]
+			then
+				servers="$h"
+			else
+				servers="$servers,$h"
+			fi
+		fi
+	done
+}
+
+# The below is an alternative to readlink -fn which doesn't exist on OS X
+# Source: http://stackoverflow.com/a/1678636
+#FULL_PATH=`python -c "import os; print(os.path.realpath('$HACKING_DIR'))"`
+
+
 do_sync() {
 	setup_provision
 	debug "Prepare to deploy ..."
@@ -318,6 +359,23 @@ do_sync() {
 		exit 14
 	fi
 
+	# use inventory script if available
+	if [ -n "$inventory" ]
+	then
+		if [ -x "$inventory" ]
+		then
+			debug "Call inventory script $inventory"
+		elif [ -e "$inventory" ]
+		then
+			debug "Parse inventory hostfile $inventory"
+			parse_ansible_hostfile $inventory
+		else
+			error "Inventory $inventory not found."
+			exit 15
+		fi
+	fi
+	# get servers
+
 	local_hook "pre-deploy"
 
 	info "Delivering $repo to $stage on $sync_to ..."
@@ -329,6 +387,7 @@ do_sync() {
 	--rsync-user=$user
 	--master=$master
 	--servers=$servers"
+
 	msg ">>> WIP: step 2, deploy ! <<<"
 }
 
