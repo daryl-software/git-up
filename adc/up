@@ -11,7 +11,8 @@ provisiondir=
 repo=
 stage=
 commitish=
-confdir=../conf.d
+defaultconfdir=../conf.d
+orgconfdir="../../git-up-config"
 debug=0
 sync_to=
 
@@ -96,15 +97,30 @@ get_conf() {
 	then
 		# Example: fetch or update config files
 		hook pre_conf
-		for conffile in default.ini organization.ini ${repo}.default.ini ${repo}.ini 
+
+		if [ ! -d "$orgconfdir" ]
+		then
+			warn "You should add your organization and projects specific config files in $orgconfdir."
+		else
+			debug "Update internal git-up config repository ($orgconfdir)"
+			# can't use --work-tree parameter as we are in a git repository ... 
+			# so I use a subshell
+			( cd $orgconfdir && git pull --ff-only origin master )  >&2
+		fi
+
+		for confdir in $defaultconfdir $orgconfdir
 		do
-			cnf=$confdir/$conffile
-			if [ -e $cnf ]
-			then
-				debug "Parse $cnf"
-				cfg_parser $cnf
-			fi
+			for conffile in default.ini organization.ini ${repo}.default.ini ${repo}.ini 
+			do
+				cnf=$confdir/$conffile
+				if [ -e $cnf ]
+				then
+					debug "Parse #$n $cnf"
+					cfg_parser $cnf
+				fi
+			done
 		done
+
 		hook post_conf
 	fi
 }
@@ -319,20 +335,19 @@ parse_ansible_hostfile() {
 	fi
 	debug "Call ansible: $ansible"
 	hosts=$( $ansible --inventory "$hostfile" --list-hosts $repo | awk '{print $1}' )
-
+	
+	debug "Hosts found: $hosts"
 	# master is first if not already setup
-	for h in $hosts
+	for h in "$hosts"
 	do
 		if [ -z "$master" ]
 		then
-			master=$h
+			master="$h"
+		elif [ -z "$servers" ]
+		then
+			servers="$h"
 		else
-			if [ -z "$server" ]
-			then
-				servers="$h"
-			else
-				servers="$servers,$h"
-			fi
+			servers="$servers,$h"
 		fi
 	done
 }
@@ -349,7 +364,7 @@ do_sync() {
 	if ! cfg.section.deploy-$stage 2>/dev/null
 	then
 		error "$repo didn't have $stage deployment configuration, or is not authorized to."
-		msgy "Hint: add a configuration file $confdir/${repo}.ini"
+		msgy "Hint: add a configuration file $orgconfdir/${repo}.ini"
 		exit 9
 	fi
 
@@ -359,12 +374,20 @@ do_sync() {
 		exit 14
 	fi
 
+	debug "inventory=$inventory"
+
+	for i in $( seq 1 ${#inventory[@]} )
+	do
+		inventory[$i]="$( echo "${inventory[$i]}" | sed "s/REPOSITORY/$repo/; s/STAGE/$stage/;" )"
+	done
+
 	# use inventory script if available
 	if [ -n "$inventory" ]
 	then
 		if [ -x "$inventory" ]
 		then
-			debug "Call inventory script $inventory"
+			debug "Call inventory script $inventory with args '${inventory[@]:1}'"
+			eval $( ${inventory[@]} )
 		elif [ -e "$inventory" ]
 		then
 			debug "Parse inventory hostfile $inventory"
@@ -378,15 +401,27 @@ do_sync() {
 
 	local_hook "pre-deploy"
 
+	if [ -z "$master" ]
+	then
+		error "Master not found."
+		exit 16
+	fi
+
 	info "Delivering $repo to $stage on $sync_to ..."
-	debug "to_do_script
+	local sync_cmd="to_do_script
 	--repo=$repo
 	--stage=$stage
 	--source-dir=$gitdir
 	--rsync-module=$rsync_module
 	--rsync-user=$user
-	--master=$master
+	--master=$master"
+	if [ -n "$servers" ]
+	then
+		sync_cmd="$sync_cmd 
 	--servers=$servers"
+	fi
+
+	debug "$sync_cmd"
 
 	msg ">>> WIP: step 2, deploy ! <<<"
 }

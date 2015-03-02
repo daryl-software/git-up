@@ -24,5 +24,8 @@
   - id_rsa
   - id_rsa.pub
 
-#- name: GITOLITE | gitolite.rc patch
+# TODO:
+# - patch gitolite.rc
+# - clone git-up to GITOLITE_FOLDER/git-up
+# - clone git-up-config to GITOLITE_FOLDER/git-up-config (internal config)
   

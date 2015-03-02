@@ -164,6 +164,17 @@ sed -r 's/^#? ?\$GL_ADC_PATH ?= (.+)/$GL_ADC_PATH = "git-up\/adc";/' .gitolite.r
 vim .gitolite.rc # and change $GL_ADC_PATH to "git-up/adc"
 ```
 
+
+Configuration
+-------------
+
+Default configuration is set in `conf.d/default.ini` and can be overrided by your own config files in your own git
+repository.
+You have to clone your git-up-config repository to `git-up/../git-up-config` folder on the gitolite/gitlab server.
+
+
+
+
 Usage
 -----
 
