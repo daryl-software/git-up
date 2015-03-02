@@ -11,9 +11,7 @@
   file: path={{ deploy_home }} owner={{ deploy_user }} group={{ deploy_group }} recurse=no
 
 - name: USER | authorized_key
-  authorized_key: user={{ deploy_user }} key="{{ item }}"
-  with_file:
-  - private/git/id_rsa.pub
+  authorized_key: user={{ deploy_user }} key="{{ deploy_ssh_pub }}"
 
 - name: DEST | check deploy folder
   file: path={{ deploy_folder }} state=directory owner={{ deploy_user }} group={{ deploy_group }} recurse=no
@@ -23,9 +21,9 @@
 
 - name: RSYNC | modules config
   template: src=rsyncd.conf dest=/etc/rsyncd.conf
-  notify: restart rsync
+  notify: reload rsync
 
 - name: RSYNC | enable
   replace: dest=/etc/default/rsync regexp="^RSYNC_ENABLE=.*" replace="RSYNC_ENABLE=true"
-  notify: restart rsync
+  notify: reload rsync
 
