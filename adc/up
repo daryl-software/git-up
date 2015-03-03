@@ -105,7 +105,7 @@ get_conf() {
 			debug "Update internal git-up config repository ($orgconfdir)"
 			# can't use --work-tree parameter as we are in a git repository ... 
 			# so I use a subshell
-			( cd $orgconfdir && git pull --ff-only origin master )  >&2
+			( cd $orgconfdir && git pull -q --ff-only origin master )  >&2
 		fi
 
 		for confdir in $defaultconfdir $orgconfdir
@@ -248,19 +248,19 @@ provision() {
 	if [ $cloned -gt 0 ]
 	then
 		msg "Initialize to $commitish"
-		git checkout -q $commitish
+		git checkout $( test $debug -eq 0 && echo -q ) $commitish
 	fi
 
 	chead="$( git rev-parse HEAD )"
 	set +e
 	cabbrev="$( git rev-parse --abbrev-ref HEAD )"
 	debug "cabbrev=$cabbrev"
-	if [ "$cabbrev" != "HEAD" ]
+	if [ "$cabbrev" = "HEAD" ]
 	then
+		cpretty=$cabbrev
+	else
 		cbranch="$cabbrev"
 		cpretty="$cbranch"
-	else
-		cpretty=$chead
 	fi
 	ctag="$( git describe --tags --exact-match $chead 2>/dev/null )"
 	if [ -n "$ctag" ]
@@ -374,16 +374,16 @@ do_sync() {
 		exit 14
 	fi
 
-	debug "inventory=$inventory"
-
-	for i in $( seq 1 ${#inventory[@]} )
-	do
-		inventory[$i]="$( echo "${inventory[$i]}" | sed "s/REPOSITORY/$repo/; s/STAGE/$stage/;" )"
-	done
-
 	# use inventory script if available
 	if [ -n "$inventory" ]
 	then
+		debug "inventory=$inventory"
+		# Replace REPOSITORY and STAGE parameters 
+		for i in $( seq 1 ${#inventory[@]} )
+		do
+			inventory[$i]="$( echo "${inventory[$i]}" | sed "s/REPOSITORY/$repo/; s/STAGE/$stage/;" )"
+		done
+
 		if [ -x "$inventory" ]
 		then
 			debug "Call inventory script $inventory with args '${inventory[@]:1}'"
@@ -397,7 +397,10 @@ do_sync() {
 			exit 15
 		fi
 	fi
-	# get servers
+
+	# OK, then checkout repository to what we want
+	debug "Checkout to origin/$sync_to"
+	git checkout $( test $debug -eq 0 && echo -q ) $sync_to
 
 	local_hook "pre-deploy"
 
@@ -407,23 +410,29 @@ do_sync() {
 		exit 16
 	fi
 
-	info "Delivering $repo to $stage on $sync_to ..."
-	local sync_cmd="to_do_script
-	--repo=$repo
-	--stage=$stage
-	--source-dir=$gitdir
-	--rsync-module=$rsync_module
-	--rsync-user=$user
-	--master=$master"
+	msg ">>> Delivering $repo to $stage on $sync_to ..."
+	local sync_cmd="./git-deploy.pl
+--repo=$repo
+--stage=$stage
+--source-dir=$gitdir
+--rsync-module=$rsync_module
+--rsync-user=$user
+--master=$master"
+
+	if [ $debug -gt 0 ]
+	then
+		sync_cmd="$sync_cmd 
+--debug"
+	fi
+
 	if [ -n "$servers" ]
 	then
 		sync_cmd="$sync_cmd 
-	--servers=$servers"
+--servers=$servers"
 	fi
 
 	debug "$sync_cmd"
-
-	msg ">>> WIP: step 2, deploy ! <<<"
+	$sync_cmd
 }
 
 # 
