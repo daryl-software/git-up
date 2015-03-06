@@ -361,13 +361,75 @@ parse_ansible_hostfile() {
 	done
 }
 
+
+set_lockfile() {
+	lockfile="/tmp/git_up_${repo}_${stage}.lock"
+}
+
+
+check_lockfile() {
+	[ -e $lockfile ]
+}
+
+
+wait_for_lock() {
+	debug "check lock"
+	set_lockfile
+
+	trap cleanup INT QUIT TERM EXIT
+
+	# LOCK
+	while check_lockfile
+	do
+		cat $lockfile
+		lastm=$( stat -c %Y $lockfile )
+		now=$( date +%s )
+		td=$(( $now - $lastm ))
+		if [ $td -gt 120 ]
+		then
+			warn "Lock file too old (2min), removing it..."
+			rm -f $lockfile
+		fi
+		sleep 1
+	done
+}
+
+
+get_user() {
+	if is_gitolite
+	then
+		echo $GL_USER
+	elif is_gitlab
+	then
+		echo "GITLAB_USER"
+	else
+		echo "unknown"
+	fi
+}
+
+
+create_lock() {
+	set_lockfile
+	echo "\033[43m\033[1;31m$( get_user ) is deploying '$repo' on $stage with $commitish, please wait ...\033[0m" > $lockfile
+}
+
+
+cleanup () {
+	for file in $lockfile $difffile
+	do
+		test -e $file && rm -f $file
+	done
+}
+
 # The below is an alternative to readlink -fn which doesn't exist on OS X
 # Source: http://stackoverflow.com/a/1678636
 #FULL_PATH=`python -c "import os; print(os.path.realpath('$HACKING_DIR'))"`
 
-
 do_sync() {
 	setup_provision
+	wait_for_lock
+	create_lock
+
 	debug "Prepare to deploy ..."
 	cfg.section.deploy
 	if ! cfg.section.deploy-$stage 2>/dev/null
@@ -442,6 +504,7 @@ do_sync() {
 
 	debug "$sync_cmd"
 	$sync_cmd
+	cleanup
 }
 
 # 
