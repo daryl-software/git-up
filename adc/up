@@ -146,7 +146,7 @@ hook() {
 			if [ -x "$hook" ]
 			then
 				debug "Call hook: $hook"
-				$hook $stage $repo
+				$hook $stage $repo $gitdir || exit $?
 			else
 				debug "hook $1 => '$hook' : script not found."
 			fi
@@ -252,7 +252,7 @@ provision() {
 	if [ $cloned -gt 0 ]
 	then
 		msg "Initialize to $commitish"
-		git checkout $( test $debug -eq 0 && echo -q ) $commitish
+		git checkout $( test $debug -eq 0 && echo -q ) -f $commitish
 	fi
 
 	chead="$( git rev-parse HEAD )"
@@ -473,6 +473,7 @@ do_sync() {
 	debug "Checkout to $sync_to"
 	git checkout $( test $debug -eq 0 && echo -q ) -f $sync_to
 
+	hook "pre_deploy"
 	local_hook "pre-deploy"
 
 	if [ -z "$master" ]
@@ -558,6 +559,4 @@ done
 # TODO: 
 # - check that sync_to is in the future
 #   else, use --force
-# - lock file
 # - ezuplog
-# - composer

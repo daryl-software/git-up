@@ -1,0 +1,38 @@
+#!/bin/bash
+# vim: set ft=sh:
+
+
+stage=$1
+repo=$2
+gitdir=$3
+
+if [ -d "$gitdir" ]
+then
+	cd "$gitdir" || exit 2
+
+	# composer
+	composererror=0
+	if [ -e composer.lock ]
+	then
+		if [ ! -d vendor ]
+		then
+			composererror=1
+			msgy ">= COMPOSER INSTALL <="
+			composer=$( which composer )
+			if composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install
+			then
+				composererror=0
+			else
+				composererror=1
+			fi
+		else
+			echo "(COMPOSER detected but no updates required.)" >&2
+		fi
+		if [ $composererror -gt 0 ]
+		then
+			echo "COMPOSER INSTALL FAILED" >&2
+			composer validate
+			exit 3
+		fi
+	fi
+fi
