@@ -36,12 +36,13 @@ remote=
 sshhost=
 reponame=
 LANG=C
-stage=
+stage=preprod # default stage
 debug=0 # --debug
 check=0
 force=0
 diff=0
 upopts=
+infosonly=0
 commitish=
 newtag=
 
@@ -156,60 +157,57 @@ get_next_tag() {
 }
 
 fetch_info() {
-	if [ -z "$ppbranch" ]
+	msg ">>> Connect to remote $sshhost ..."
+	infofile="/tmp/${USER}.git-up-info.$$"
+	if ssh $sshopts $sshhost up $upopts "$reponame" $stage --init "$commitish" infos >$infofile
 	then
-		msg ">>> Connect to remote $sshhost ..."
-		infofile="/tmp/${USER}.git-up-info.$$"
-		if ssh $sshopts $sshhost up $upopts "$reponame" $stage --init "$commitish" infos >$infofile
+		. $infofile
+		if [ $debug -gt 0 ]
 		then
-			. $infofile
-			if [ $debug -gt 0 ]
-			then
-				debug "----------------------------"
-				cat $infofile >&2
-				debug "----------------------------"
-			fi
-			rm -f $infofile
-		else
-			cat $infofile
-			rm -f $infofile
-			chead=
+			debug "----------------------------"
+			cat $infofile >&2
+			debug "----------------------------"
 		fi
-
-		if [ -z "$chead" ]
-		then
-			error "Failed to get current ref for <$stage>"
-		fi
-
-		blockcolor="\033[44m\033[1;37m"
-		echo -n $blockcolor
-		echo -n "|--------------------------------------------------------------------|"
-		echo "\033[0m"
-
-		echo -n $blockcolor
-		echo -n "|                                                                    |\r"
-		echo -n "| $reponame <$stage> is on "
-		if [ ${#cpretty} -gt 12 ]
-		then
-			echo "\033[0m"
-
-			echo -n $blockcolor
-			echo -n "|                                                                    |\r"
-			echo -n "| $remote/$cpretty"
-		else
-			echo -n "$remote/$cpretty $commitish"
-		fi
-		echo "\033[0m"
-
-		echo -n $blockcolor
-		echo -n "|                                                                    |\r"
-		echo -n "| >> deploying to $commitish <<"
-		echo "\033[0m"
-
-		echo -n $blockcolor
-		echo -n "|--------------------------------------------------------------------|"
-		echo "\033[0m"
+		rm -f $infofile
+	else
+		cat $infofile
+		rm -f $infofile
+		chead=
 	fi
+
+	if [ -z "$chead" ]
+	then
+		error "Failed to get current ref for <$stage>"
+	fi
+
+	blockcolor="\033[44m\033[1;37m"
+	echo -n $blockcolor
+	echo -n "|--------------------------------------------------------------------|"
+	echo "\033[0m"
+
+	echo -n $blockcolor
+	echo -n "|                                                                    |\r"
+	echo -n "| $reponame <$stage> is on "
+	if [ ${#cpretty} -gt 12 ]
+	then
+		echo "\033[0m"
+
+		echo -n $blockcolor
+		echo -n "|                                                                    |\r"
+		echo -n "| $cpretty"
+	else
+		echo -n "$cpretty"
+	fi
+	echo "\033[0m"
+
+	echo -n $blockcolor
+	echo -n "|                                                                    |\r"
+	echo -n "| >> deploying to $commitish <<"
+	echo "\033[0m"
+
+	echo -n $blockcolor
+	echo -n "|--------------------------------------------------------------------|"
+	echo "\033[0m"
 }
 
 
@@ -300,7 +298,10 @@ do
 			;;
 		--debug)
 			debug=1
-			upopts="--debug "
+			upopts="--debug $upopts"
+			;;
+		--info)
+			infosonly=1
 			;;
 		# git opts
 		-*)
@@ -354,6 +355,11 @@ then
 	msgy "-------------------"
 fi
 
+
+if [ $infosonly -gt 0 ]
+then
+	exit 0
+fi
 
 # DIFF / WHATCHANGED
 if [ $diff -gt 0 ]

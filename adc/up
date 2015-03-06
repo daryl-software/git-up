@@ -228,6 +228,7 @@ setup_provision() {
 	fi
 	export GIT_WORK_TREE="$gitdir"
 	export GIT_DIR="$gitdir/.git"
+	debug "work-tree=$GIT_WORK_TREE"
 }
 
 provision() {
@@ -243,7 +244,8 @@ provision() {
 		cloned=1
 	fi
 	debug "git fetch"
-	git fetch --tags -q origin
+	git fetch --tags $( test $debug -eq 0 && echo -q ) origin
+	git fetch $( test $debug -eq 0 && echo -q ) origin
 	debug "git fetch done."
 
 	# init on commitish
@@ -255,14 +257,14 @@ provision() {
 
 	chead="$( git rev-parse HEAD )"
 	set +e
-	cabbrev="$( git rev-parse --abbrev-ref HEAD )"
-	debug "cabbrev=$cabbrev"
-	if [ "$cabbrev" = "HEAD" ]
+	# On which branch am I ?
+	cbranch=$( git branch -r --contains $chead | head -1 | awk '{print $3}' | cut -d/ -f2 )
+	debug "cbranch=$cbranch"
+	if [ -n "$cbranch" ]
 	then
-		cpretty=$cabbrev
-	else
-		cbranch="$cabbrev"
 		cpretty="$cbranch"
+	else
+		cpretty="$chead"
 	fi
 	ctag="$( git describe --tags --exact-match $chead 2>/dev/null )"
 	if [ -n "$ctag" ]
@@ -406,8 +408,8 @@ do_sync() {
 	fi
 
 	# OK, then checkout repository to what we want
-	debug "Checkout to origin/$sync_to"
-	git checkout $( test $debug -eq 0 && echo -q ) $sync_to
+	debug "Checkout to $sync_to"
+	git checkout $( test $debug -eq 0 && echo -q ) -f $sync_to
 
 	local_hook "pre-deploy"
 
@@ -489,3 +491,10 @@ do
 	esac
 	shift
 done
+
+# TODO: 
+# - check that sync_to is in the future
+#   else, use --force
+# - lock file
+# - ezuplog
+# - composer
