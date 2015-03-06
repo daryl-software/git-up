@@ -206,7 +206,6 @@ do_update() {
 }
 
 setup_provision() {
-	check_repo
 	get_conf
 	if is_gitolite
 	then
@@ -218,12 +217,15 @@ setup_provision() {
 	else
 		provisiondir="../../provisioning/$stage"
 	fi
+	gitdir="$provisiondir/$repo"
+
+	check_repo
+
 	if [ ! -d "$provisiondir" ]
 	then
 		debug "mkdir $PWD/$provisiondir"
 		mkdir -p "$provisiondir"
 	fi
-	gitdir="$provisiondir/$repo"
 	export GIT_WORK_TREE="$gitdir"
 	export GIT_DIR="$gitdir/.git"
 }
@@ -313,6 +315,11 @@ check_repo() {
 			return 0
 		fi
 	done
+	if [ -d "$gitdir" ]
+	then
+		warn "git dir '$gitdir' exists, removing it."
+		rm -rf "$gitdir"
+	fi
 	error "Stage <$stage> is not allowed."
 	exit 8
 }
