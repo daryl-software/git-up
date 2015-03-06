@@ -792,7 +792,6 @@ else
 		push @args, "--servers=$servers";
 		push @args, "--debug" if ($debug);
 
-		$debug++;
 		my $cmd = "perl ".get_remote_path()."/$me ".join(" ", @args)."; echo EZSYNCDONE";
 
 		logdebug("Exec $cmd\n");
