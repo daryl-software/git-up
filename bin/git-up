@@ -138,7 +138,7 @@ get_next_tag() {
 		autotag="ssh $sshopts $sshhost up autotag"
 	fi
 	debug "autotag: $autotag"
-	tag_pattern=
+	local tag_pattern=
 	debug "hotfix=$hotfix release=$release pattern=$tag_pattern"
 
 	# with tag pattern, grep all
@@ -158,7 +158,7 @@ get_next_tag() {
 
 fetch_info() {
 	msg ">>> Connect to remote $sshhost ..."
-	infofile="/tmp/${USER}.git-up-info.$$"
+	local infofile="/tmp/${USER}.git-up-info.$$"
 	if ssh $sshopts $sshhost up $upopts "$reponame" $stage --init "$commitish" infos >$infofile
 	then
 		. $infofile
@@ -180,7 +180,7 @@ fetch_info() {
 		error "Failed to get current ref for <$stage>"
 	fi
 
-	blockcolor="\033[44m\033[1;37m"
+	local blockcolor="\033[44m\033[1;37m"
 	echo -n $blockcolor
 	echo -n "|--------------------------------------------------------------------|"
 	echo "\033[0m"
@@ -212,7 +212,7 @@ fetch_info() {
 
 
 check_pushed() {
-	ref=$( git rev-parse $commitish )
+	local ref=$( git rev-parse $commitish )
 	if git cherry | grep -q "$ref$"
 	then
 		commits=$( git cherry | wc -l )
@@ -232,15 +232,15 @@ resync() {
 
 
 gitdiff() {
-	diff=$1
+	local diff=$1
 	shift
-	d1=HEAD
+	local d1=HEAD
 	if [ -n "$1" ]
 	then
 		d1="$1"
 		shift
 	fi
-	d2="$cpretty"
+	local d2="$cpretty"
 
 	if [ "$d1" = "$d2" ]
 	then
@@ -349,6 +349,7 @@ then
 	echo repo=$reponame
 	echo remoteuri=$remoteuri
 	echo remote=$remote
+	echo branch_name=$branch_name
 	echo "-------------------"
 	echo hotfix=$hotfix
 	echo release=$release

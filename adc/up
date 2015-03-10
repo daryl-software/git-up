@@ -84,7 +84,7 @@ get_conf() {
 			debug "Update internal git-up config repository ($orgconfdir)"
 			# can't use --work-tree parameter as we are in a git repository ... 
 			# so I use a subshell
-			( cd $orgconfdir && git pull -q --ff-only origin master )  >&2
+			( unset GIT_DIR; cd $orgconfdir && git pull $( test $debug -eq 0 && echo -q ) --ff-only origin master )  >&2
 		fi
 
 		for confdir in $defaultconfdir $orgconfdir
@@ -119,6 +119,7 @@ get_conf() {
 	fi
 }
 
+# Hook from this repository, or config repo
 hook() {
 	if [ -n "$1" ]
 	then
@@ -137,17 +138,21 @@ hook() {
 		debug "hook '$hookname' ?"
 		if [ -n "$hookfile" ]
 		then
-			if [ -x "$hookfile" ]
-			then
-				debug "Call hook: $hookfile"
-				$hookfile $stage $repo $gitdir $@ || exit $?
-			else
-				debug "hook $hookname => '$hookfile' : script not found."
-			fi
+			for hookscript in "$hookfile" "$orgconfdir/$hookfile"
+			do
+				if [ -x "$hookscript" ]
+				then
+					debug "Call hook: $hookscript"
+					$hookscript $stage $repo $gitdir $@ || exit $?
+				else
+					debug "hook $hookname => '$hookscript' : script not found."
+				fi
+			done
 		fi
 	fi
 }
 
+# Local to the deployed repository
 local_hook() {
 	local hook="$1"
 	shift
@@ -277,6 +282,11 @@ do_infos() {
 	provision
 	get_current_state
 
+	local tag_enabled=$( get_stage_var tag_enabled )
+	local tag_stage=$( get_stage_var tag_stage )
+	local branch_name=$( get_stage_var branch_name )
+	local branch_stage=$( get_stage_var branch_stage )
+
 	if [ $tag_enabled -gt 0 ] && [ -n "$tag_stage" ] && [ "$tag_stage" = "$stage" ]
 	then
 		debug "Stage <$stage> is configured on tags."
@@ -285,6 +295,8 @@ do_infos() {
 	else
 		echo "tag=0"
 	fi
+	echo "branch_name='$branch_name'"
+	echo "branch_stage='$branch_stage'"
 
 	echo "chead='$chead'"
 	echo "ctag='$ctag'"
@@ -523,7 +535,7 @@ do_sync() {
 	debug "$sync_cmd"
 	$sync_cmd
 
-	hook "post_deploy" $before $after
+	hook "post_deploy" $before $after $( get_user )
 
 	cleanup
 }
@@ -582,4 +594,3 @@ done
 # TODO: 
 # - check that sync_to is in the future
 #   else, use --force
-# - ezuplog
