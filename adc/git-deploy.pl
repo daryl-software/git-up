@@ -547,7 +547,7 @@ sub hook
 	if (-x $hook)
 	{
 		loginfo3 "Execute $hooktype-deploy hook ...";
-		if (system("$hook $stage $repo"))
+		if (system($hook, $stage, $repo))
 		{
 			logfatal("Hook '$hooktype' FAILED: exitcode=$? ($!)");
 		}

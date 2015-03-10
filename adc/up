@@ -524,7 +524,6 @@ do_sync() {
 	$sync_cmd
 
 	hook "post_deploy" $before $after
-	local_hook "post-deploy" $before $after
 
 	cleanup
 }
