@@ -7,7 +7,7 @@
     system=yes
     createhome=yes
     shell=/bin/bash
-    state=absent
+    state=present
   with_items: deploy_conf
   register: deploy_user_out
   # 8 = user already exists
