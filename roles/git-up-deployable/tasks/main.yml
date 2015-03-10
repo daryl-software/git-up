@@ -6,6 +6,9 @@
     system=yes
     createhome=yes
     shell=/bin/bash
+  register: deploy_user_out
+  # 8 = user already exists
+  failed_when: deploy_user_out.rc not in (0, 8)
 
 - name: USER | fix permission
   file: path={{ deploy_home }} owner={{ deploy_user }} group={{ deploy_group }} recurse=no
