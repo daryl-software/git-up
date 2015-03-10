@@ -219,34 +219,36 @@ setup_provision() {
 		debug "mkdir $PWD/$provisiondir"
 		mkdir -p "$provisiondir"
 	fi
-	export GIT_WORK_TREE="$gitdir"
-	export GIT_DIR="$gitdir/.git"
-	debug "work-tree=$GIT_WORK_TREE"
-}
 
-provision() {
 	local cloned=0
 	if [ ! -d "$provisiondir/$repo" ]
 	then
 		msgy "Clone $repo, please wait ..."
-		if ! git clone -l -q $repositories/${repo}.git $provisiondir/$repo >&2
+		if ! git clone -l -q $repositories/${repo}.git/ $provisiondir/$repo >&2
 		then
 			echo "# FATAL: unable to clone $repo."
 			exit 5
 		fi
 		cloned=1
 	fi
-	debug "git fetch"
-	git fetch --tags $( test $debug -eq 0 && echo -q ) origin
-	git fetch $( test $debug -eq 0 && echo -q ) origin
-	debug "git fetch done."
 
-	# init on commitish
+	export GIT_WORK_TREE="$gitdir"
+	export GIT_DIR="$gitdir/.git"
+	debug "work-tree=$GIT_WORK_TREE"
+
+	# init on commitish if cloned
 	if [ $cloned -gt 0 ]
 	then
 		msg "Initialize to $commitish"
 		git checkout $( test $debug -eq 0 && echo -q ) -f $commitish
 	fi
+}
+
+provision() {
+	debug "git fetch"
+	git fetch --tags $( test $debug -eq 0 && echo -q ) origin
+	git fetch $( test $debug -eq 0 && echo -q ) origin
+	debug "git fetch done."
 }
 
 get_current_state() {
@@ -428,7 +430,7 @@ get_stage_var() {
 	# Override with stage_ vars
 	varname="${stage}_$var"
 	local stageval=${!varname}
-	if [ -n ${stageval-x} ] # check that $stageval is set
+	if [ -n ${stageval-x} ] 2>/dev/null # check that $stageval is set
 	then
 		val="$stageval"
 	fi
@@ -493,7 +495,7 @@ do_sync() {
 
 	if [ -z "$master" ]
 	then
-		error "Master not found."
+		error "Master not found. This repository maybe not set for deployment."
 		exit 16
 	fi
 
@@ -558,6 +560,9 @@ do
 		--init)
 			shift
 			commitish="$1"
+			;;
+		--*)
+			warn "Parameter unknown: $1"
 			;;
 		*)
 			if [ -z "$repo" ]

@@ -19,6 +19,7 @@ use Cwd qw/realpath/;
 # for SSH control
 use IPC::Open3;
 use IO::Select;
+use IO::Handle;
 use threads ('exit' => 'threads_only');
 use Thread::Queue;
 use Data::Dumper;
@@ -205,7 +206,17 @@ sub Usage # {{{
 
 sub sshcmd
 {
-	my $ssh = "/usr/bin/ssh -C -o StrictHostKeyChecking=no -t #tunnel# $rsync_user\@$master";
+	my $ssh = "/usr/bin/ssh -C -o StrictHostKeyChecking=no -t #tunnel# ";
+
+	my ($host, $port) = split/:/, $master;
+
+	if (defined($port))
+	{
+		$ssh .= "-p $port ";
+		$master = $host;
+	}
+
+	$ssh .= $rsync_user.'@'.$master;
 	my $sshtun = $ssh." '
 	while read CMD
 	do
@@ -228,11 +239,12 @@ sub sshtun # {{{ Start the SSH tunnel
 
 	$sshtun =~ s/#tunnel#/-L $rsync_tun_port:localhost:873/;
 	loginfo2($logprefix."Starting secure tunnel : $rsync_user\@$master...");
-	#logdebug($logprefix.$sshtun."\n");
+	#logdebug($logprefix.$sshtun.$/);
 
 	eval
 	{
 		$sshpid = open3(\*SSHIN, \*SSHOUT, \*SSHERR, $sshtun);
+		$sshio = IO::Select->new(*SSHOUT, *SSHERR);
 	};
 	if ($@)
 	{
@@ -247,7 +259,6 @@ sub sshtun # {{{ Start the SSH tunnel
 	}
 	else
 	{
-		$sshio = IO::Select->new(*SSHOUT, *SSHERR);
 		# wait for establishment
 		loginfo2($logprefix."Waiting for connection...");
 		my ($out, $err, $bytes) = sshrun("echo READY", 1, 10);
@@ -285,11 +296,14 @@ sub sshtun # {{{ Start the SSH tunnel
 
 sub closesshtun # {{{
 {
-	loginfo3("Close SSH.\n");
-	print SSHIN $/;
-	close(SSHIN);
-	close(SSHOUT);
-	close(SSHERR);
+	if (SSHIN->opened())
+	{
+		loginfo3("Close SSH.");
+		print SSHIN $/;
+		close(SSHIN);
+		close(SSHOUT);
+		close(SSHERR);
+	}
 }
 # }}}
 
@@ -601,14 +615,26 @@ sub sshrun
 	my $out;
 	my $err;
 	my $bytes = 0;
-	print SSHIN "$cmd$/";
+
+	if (SSHIN->opened())
+	{
+		print SSHIN "$cmd$/";
+	}
+	else
+	{
+		logwarn("SSH", "SSH stdin is closed");
+	}
+
 	while (@ready = $sshio->can_read($timeout))
 	{
 		my $chomped = 0;
+		my $b = 0;
 		foreach my $fh (@ready)
 		{
 			my $read;
-			$bytes += sysread($fh, $read, 16);
+			$b += sysread($fh, $read, 16);
+			
+			$bytes += $b;
 
 			$chomped = chomp($read) if ($oneline);
 
@@ -625,6 +651,11 @@ sub sshrun
 		{
 			last;
 		}
+		if ($b == 0)
+		{
+			last;
+		}
+
 	}
 	return ($out, $err, $bytes);
 }
