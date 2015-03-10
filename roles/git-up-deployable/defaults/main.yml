@@ -1,12 +1,13 @@
-deploy_user: ops
-deploy_group: "{{ deploy_user }}"
-deploy_uid: 333
-deploy_home: /var/local
-deploy_ssh_pub:
 web_user: www-data
 
-deploy_folder: /var/www
+deploy_conf:
+- name: 'deploy'
+  folder: /var/www
+  user: ops
+  group: "{{ user }}"
+  uid: 333
+  home: /var/local
+  ssh_pub:
+  hosts:
+  - 127.0.0.1
 
-# security
-deploy_hosts:
-- 127.0.0.1

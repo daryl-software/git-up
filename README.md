@@ -141,6 +141,34 @@ We use [Ansible](http://www.ansible.com/) and you just have to add a role to you
 
 If you use another orchestration tool, there is not so much to do.
 
+Include git-up-deployable this way :
+
+```
+-- in your playbook.yml
+  - { role: git-up-deployable,
+      deploy_hosts:
+	  - 127.0.0.1
+      - 192.168.0.0/16
+      deploy_conf: [{
+        name: "deployA",
+        user: "userA",
+        group: "userA",
+        uid: 333,
+        home: "/home/userA",
+        folder: "/var/local/workA",
+        hosts: "{{ deploy_hosts }}",
+        },{
+        name: "deployB",
+        user: "userB",
+        group: "userB",
+        uid: 334,
+        home: "/home/userB",
+        folder: "/var/local/workB",
+        hosts: "{{ deploy_hosts }}",
+      }]
+    }
+```
+
 #### Prerequisites
 
 Developpers than know git, and the ones who have to deliver needs to know terminal and ssh.
@@ -148,7 +176,7 @@ Developpers than know git, and the ones who have to deliver needs to know termin
 Ansible roles are available to help you setup provisionning and destination servers. They need a Debian server, but it's up to you to hack them for any other distribution, it's not a big deal, only few tools to have.
 
 - ssh
-- perl (python?)
+- perl
 - rsync
 
 

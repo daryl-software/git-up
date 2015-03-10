@@ -1,23 +1,29 @@
 - name: USER | deploy group
-  group: name={{ deploy_user }} system=yes
+  group: name={{ item.user }} system=yes
+  with_items: deploy_conf
 
 - name: USER | deploy user
-  user: name={{ deploy_user }} uid={{ deploy_uid }} group={{ deploy_group }} home={{ deploy_home }}
+  user: name={{ item.user }} uid={{ item.uid }} group={{ item.group }} home={{ item.home }}
     system=yes
     createhome=yes
     shell=/bin/bash
+    state=absent
+  with_items: deploy_conf
   register: deploy_user_out
   # 8 = user already exists
-  failed_when: deploy_user_out.rc not in (0, 8)
+  failed_when: deploy_user_out.rc is defined and deploy_user_out.rc not in (0, 8)
 
 - name: USER | fix permission
-  file: path={{ deploy_home }} owner={{ deploy_user }} group={{ deploy_group }} recurse=no
+  file: path={{ item.home }} owner={{ item.user }} group={{ item.group }} recurse=no
+  with_items: deploy_conf
 
 - name: USER | authorized_key
-  authorized_key: user={{ deploy_user }} key="{{ deploy_ssh_pub }}"
+  authorized_key: user={{ item.user }} key="{{ deploy_ssh_pub }}"
+  with_items: deploy_conf
 
 - name: DEST | check deploy folder
-  file: path={{ deploy_folder }} state=directory owner={{ deploy_user }} group={{ deploy_group }} recurse=no
+  file: path={{ item.folder }} state=directory owner={{ item.user }} group={{ item.group }} recurse=no
+  with_items: deploy_conf
 
 - name: APT | install rsync
   apt: pkg=rsync state=present
