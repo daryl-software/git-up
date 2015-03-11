@@ -18,6 +18,9 @@
 #TIPS:
 #    <stage> hotfix -p       : params -* are passed to git log
 #
+#SPECIALS:
+#    self-update             : self-update :)
+#
 # https://github.com/ezweb/git-up
 
 
@@ -304,6 +307,17 @@ do
 			;;
 		--info)
 			infosonly=1
+			;;
+		self-update)
+			install_dir="$( dirname $0 )"
+			if [ -z "$install_dir" ] || [ ! -d "$install_dir" ]
+			then
+				echo "Current install-dir not found ($install_dir)."
+				exit 2
+			fi
+			echo "Self-update in $install_dir ..."
+			curl -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir "$install_dir"
+			exit $?
 			;;
 		# git opts
 		-*)
