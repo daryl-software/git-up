@@ -364,9 +364,9 @@ sub rsyncto # {{{
 	}
 	else
 	{
-		if (-e '.rsync_excludes')
+		if (-e $srcdir.'.rsync_excludes')
 		{
-			$rsync_opts .= " --exclude-from=./.rsync_excludes ";
+			$rsync_opts .= " --exclude-from=$srcdir/.rsync_excludes ";
 		}
 	
 		# compression only over internet, and not between slaves

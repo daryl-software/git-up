@@ -83,7 +83,9 @@ msgy () {
 debug() {
 	if [ $debug -gt 0 ]
 	then
-		echo "% DEBUG: [$( date -R )] >>> $@" >&2
+		local d=$( date -R 2>/dev/null )
+		[ -z "$d" ] && d="$( date )"
+		echo "% DEBUG: [$( date )] >>> $@" >&2
 	fi
 }
 

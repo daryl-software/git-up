@@ -69,7 +69,7 @@ do
 	chmod u+x "$script"
 done
 
-if type realpath >/dev/null
+if type realpath >/dev/null 2>&1
 then
 	installdir=`realpath $installdir`
 fi

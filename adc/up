@@ -444,7 +444,7 @@ get_stage_var() {
 	local stageval=${!varname}
 	if [ -n ${stageval-x} ] 2>/dev/null # check that $stageval is set
 	then
-		val="$stageval"
+		val=$stageval
 	fi
 
 	echo $val
