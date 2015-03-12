@@ -431,7 +431,7 @@ cleanup () {
 
 get_stage_var() {
 	local var="$1"
-	local varname="default_$var"
+	local varname="$var"
 	local val=${!varname}
 
 	debug "$varname = $val"
