@@ -207,7 +207,7 @@ fetch_info() {
 
 	echo -n $blockcolor
 	echo -n "|                                                                    |\r"
-	echo -n "| >> deploying to $commitish <<"
+	echo -n "| >> deploying $commitish <<"
 	echo "\033[0m"
 
 	echo -n $blockcolor

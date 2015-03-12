@@ -692,10 +692,6 @@ foreach my $var2check ($stage, $sourcedir, $rsync_module, $rsync_user)
 		logfatal("Project '$repo' is not yet configured to be deployed.");
 	}
 }
-unless(defined($master) || defined($servers))
-{
-	logfatal("At least a master or some slaves are necessary.");
-}
 
 
 # debug:
@@ -722,52 +718,55 @@ if ($deploymode)
 
 	hook('mid');
 
-	loginfo3 "Deploy to ".scalar(@hosts)." servers ...";
-
-	# declaration du thread
-	my @threads;
-	my $thr_out = Thread::Queue->new();
-	sub thread_sync
+	if (scalar(@hosts) > 0)
 	{
-		my ($logprefix, $host) = @_;
-		unless (rsyncto($sourcedir, $thr_out, $host, $stage))
+		loginfo3 "Deploy to ".scalar(@hosts)." servers ...";
+
+		# declaration du thread
+		my @threads;
+		my $thr_out = Thread::Queue->new();
+		sub thread_sync
 		{
-			$thr_out->enqueue($host, "FAILED");
+			my ($logprefix, $host) = @_;
+			unless (rsyncto($sourcedir, $thr_out, $host, $stage))
+			{
+				$thr_out->enqueue($host, "FAILED");
+			}
 		}
-	}
 
-	# boucle sur les serveurs
-	foreach my $host (@hosts)
-	{
-		$host =~ /(.+?)\./;
-		next if ($1 eq $master);
-		my $logprefix = "[".get_shorthost($host)."] ";
-		# 
-		# Method thread
-		#
-		push @threads, threads->create("thread_sync", $logprefix, $host);
-	}
-
-	# Affichage => SSHOUT
-	my $display_th = threads->create(sub { 
-		my @hosts = @_;
-		my ($host, $log);
-		print "HOSTS=".join(",", @hosts)."\n";
-		do
+		# boucle sur les serveurs
+		foreach my $host (@hosts)
 		{
-			$host = $thr_out->dequeue();
-			$log = $thr_out->dequeue();
-			print "HOST=$host|LOG=$log\n" if ($host);
+			$host =~ /(.+?)\./;
+			next if ($1 eq $master);
+			my $logprefix = "[".get_shorthost($host)."] ";
+			# 
+			# Method thread
+			#
+			push @threads, threads->create("thread_sync", $logprefix, $host);
 		}
-		while (defined($host) && defined($log));
-	}, @hosts);
 
-	foreach my $thr (@threads)
-	{
-		$thr->join();
+		# Affichage => SSHOUT
+		my $display_th = threads->create(sub { 
+			my @hosts = @_;
+			my ($host, $log);
+			print "HOSTS=".join(",", @hosts)."\n";
+			do
+			{
+				$host = $thr_out->dequeue();
+				$log = $thr_out->dequeue();
+				print "HOST=$host|LOG=$log\n" if ($host);
+			}
+			while (defined($host) && defined($log));
+		}, @hosts);
+
+		foreach my $thr (@threads)
+		{
+			$thr->join();
+		}
+		$thr_out->enqueue(undef, undef);
+		$display_th->join();
 	}
-	$thr_out->enqueue(undef, undef);
-	$display_th->join();
 	hook('post');
 }
 
@@ -791,11 +790,8 @@ else
 		logfatal("Unable to start SSH vortex");
 	}
 
-	if (defined($servers))
-	{
-		get_remote_path();
-		check_myself();
-	}
+	get_remote_path();
+	check_myself();
 	
 	loginfo3("Sync to $master...");
 
@@ -804,14 +800,19 @@ else
 	my @failedsync;
 
 	# if sync passed, sync to slaves
-	if ($rsyncok && !defined($servers))
-	{
-		logdebug("No slave servers found.");
-	}
-	elsif ($rsyncok)
+	#if ($rsyncok && !defined($servers))
+	#{
+	#	logdebug("No slave servers found.");
+	#}
+	#elsif ($rsyncok)
+	if ($rsyncok)
 	{
 		my %hdata;
 
+		unless (defined($servers))
+		{
+			$servers = "";
+		}
 		# Change sourcedir to remote source dir !
 		my @args;
 		push @args, "--deploy";
