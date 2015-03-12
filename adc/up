@@ -282,11 +282,6 @@ do_infos() {
 	provision
 	get_current_state
 
-	local tag_enabled=$( get_stage_var tag_enabled )
-	local tag_stage=$( get_stage_var tag_stage )
-	local branch_name=$( get_stage_var branch_name )
-	local branch_stage=$( get_stage_var branch_stage )
-
 	if [ $tag_enabled -gt 0 ] && [ -n "$tag_stage" ] && [ "$tag_stage" = "$stage" ]
 	then
 		debug "Stage <$stage> is configured on tags."
@@ -439,13 +434,17 @@ get_stage_var() {
 	local varname="default_$var"
 	local val=${!varname}
 
+	debug "$varname = $val"
 	# Override with stage_ vars
 	varname="${stage}_$var"
 	local stageval=${!varname}
-	if [ -n ${stageval-x} ] 2>/dev/null # check that $stageval is set
+	if [ -z ${stageval-x} ] 2>/dev/null # check that $stageval is set
 	then
+		debug "$varname is not set"
+	else
 		val=$stageval
 	fi
+	debug "$varname = $val"
 
 	echo $val
 }
@@ -469,6 +468,7 @@ do_sync() {
 	local user=$( get_stage_var user )
 	local master=$( get_stage_var master )
 	local servers=$( get_stage_var servers )
+	local mutualized=$( get_stage_var mutualized )
 	
 	# use inventory script if available
 	if [ -n "$inventory" ]
@@ -524,6 +524,13 @@ do_sync() {
 	then
 		sync_cmd="$sync_cmd 
 --debug"
+	fi
+
+	debug "mutualized=$mutualized"
+	if [ $mutualized -gt 0 ]
+	then
+		sync_cmd="$sync_cmd 
+--mutu"
 	fi
 
 	if [ -n "$servers" ]

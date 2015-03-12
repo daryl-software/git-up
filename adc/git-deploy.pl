@@ -67,6 +67,7 @@ my $opt_dryrun = 0;
 my $progress_i = 0;
 my @progresschars = qw(| / - \\);
 my $deploymode = 0;
+my $mutu = 0;
 my $minrev = 0;
 # ssh
 local (*SSHIN, *SSHOUT, *SSHERR); # Tunnel's standard IN/OUT/ERR 
@@ -357,6 +358,9 @@ sub rsyncto # {{{
 
 	# rsync loop
 	my $cmd;
+	my $rsync_dest = $rsync_module;
+	$rsync_dest .= "/$stage" if (defined($stage));
+	$rsync_dest .= "/$repo" if ($mutu);
 	
 	if ($deploymode)
 	{
@@ -371,7 +375,7 @@ sub rsyncto # {{{
 	
 		# compression only over internet, and not between slaves
 		$rsync_opts .= ' --compress --compress-level=9';
-		$cmd = "$rsync $rsync_opts $srcdir rsync://localhost:$rsync_tun_port/$rsync_module/".(defined($stage) && "$stage/");
+		$cmd = "$rsync $rsync_opts $srcdir rsync://localhost:$rsync_tun_port/$rsync_dest/";
 	}
 
 	put "$cmd\n" if ($debug);
@@ -671,6 +675,7 @@ GetOptions (
 	"help" => \&Usage,
 	"debug" => \$debug,
 	"deploy" => \$deploymode,
+	"mutu" => \$mutu,
 	"repo=s" => \$repo,
 	"stage=s" => \$stage,
 	"source-dir=s" => \$sourcedir,
@@ -823,6 +828,7 @@ else
 		push @args, "--rsync-user=$rsync_user";
 		push @args, "--servers=$servers";
 		push @args, "--debug" if ($debug);
+		push @args, "--mutu" if ($mutu);
 
 		my $cmd = "perl ".get_remote_path()."/$me ".join(" ", @args)."; echo EZSYNCDONE";
 
