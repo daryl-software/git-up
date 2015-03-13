@@ -6,6 +6,8 @@ stage=$1
 repo=$2
 gitdir=$3
 
+set -e
+
 if [ -d "$gitdir" ]
 then
 	cd "$gitdir" || exit 2
@@ -14,23 +16,21 @@ then
 	composererror=0
 	if [ -e composer.lock ]
 	then
-		if [ ! -d vendor ]
+		unset GIT_DIR
+		unset GIT_WORK_TREE
+		composererror=1
+		echo -e "\033[45m\033[1;36m>= COMPOSER INSTALL <=\033[0m"
+		composer=$( which composer )
+		if $composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install
 		then
-			composererror=1
-			msgy ">= COMPOSER INSTALL <="
-			composer=$( which composer )
-			if composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install
-			then
-				composererror=0
-			else
-				composererror=1
-			fi
+			composererror=0
 		else
-			echo "(COMPOSER detected but no updates required.)" >&2
+			composererror=1
 		fi
+
 		if [ $composererror -gt 0 ]
 		then
-			echo "COMPOSER INSTALL FAILED" >&2
+			echo -e "\033[41m\033[1mCOMPOSER INSTALL FAILED\033[0m" >&2
 			composer validate
 			exit 3
 		fi

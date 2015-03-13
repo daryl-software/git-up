@@ -35,7 +35,7 @@ my $rsync_opts = "
 	--progress
 	--stats 
 	--human-readable 
-	--chmod=Du=rwx,Fug+r,Dg=rwxs 
+	--chmod=Du=rwx,Fug+r,Dg=rwxs
 	--one-file-system
 	--delay-updates
 	--delete-delay
@@ -327,6 +327,7 @@ sub rsyncto # {{{
 	my $srcdir = shift;
 	my $out = shift;
 	my $host = shift;
+	my $repo = shift || undef;
 	my $stage = shift || undef;
 	my $try = shift || 0;
 	chomp($host);
@@ -360,7 +361,7 @@ sub rsyncto # {{{
 	my $cmd;
 	my $rsync_dest = $rsync_module;
 	$rsync_dest .= "/$stage" if (defined($stage));
-	$rsync_dest .= "/$repo" if ($mutu);
+	$rsync_dest .= "/$repo" if (defined($repo) && $mutu);
 	
 	if ($deploymode)
 	{
@@ -519,7 +520,7 @@ sub rsyncto # {{{
 			put("redo\n") if ($debug);
 			$try ++;
 			sleep(1);
-			return rsyncto($srcdir, $out, $host, $stage, $try);
+			return rsyncto($srcdir, $out, $host, $repo, $stage, $try);
 		}
 	}
 	elsif($r == 5120)
@@ -586,7 +587,7 @@ sub get_remote_path
 	}
 	else
 	{
-		logfatal("Unable to found remote path from /etc/rsyncd.conf");
+		logfatal("Unable to found remote path for [$rsync_module] from /etc/rsyncd.conf");
 	}
 	return $rsync_remote_path;
 }
@@ -600,7 +601,7 @@ sub check_myself
 
 	get_remote_path();
 
-	my $rsyncret = rsyncto($0, undef, $master, undef);
+	my $rsyncret = rsyncto($0, undef, $master, undef, undef);
 
 	unless ($rsyncret)
 	{
@@ -733,7 +734,7 @@ if ($deploymode)
 		sub thread_sync
 		{
 			my ($logprefix, $host) = @_;
-			unless (rsyncto($sourcedir, $thr_out, $host, $stage))
+			unless (rsyncto($sourcedir, $thr_out, $host, $repo, $stage))
 			{
 				$thr_out->enqueue($host, "FAILED");
 			}
@@ -801,7 +802,7 @@ else
 	loginfo3("Sync to $master...");
 
 	# start sync to master
-	$rsyncok = rsyncto($sourcedir, undef, $master, $stage);
+	$rsyncok = rsyncto($sourcedir, undef, $master, $repo, $stage);
 	my @failedsync;
 
 	# if sync passed, sync to slaves

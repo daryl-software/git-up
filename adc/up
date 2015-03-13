@@ -434,7 +434,6 @@ get_stage_var() {
 	local varname="$var"
 	local val=${!varname}
 
-	debug "$varname = $val"
 	# Override with stage_ vars
 	varname="${stage}_$var"
 	local stageval=${!varname}
@@ -444,7 +443,6 @@ get_stage_var() {
 	else
 		val=$stageval
 	fi
-	debug "$varname = $val"
 
 	echo $val
 }
@@ -475,21 +473,23 @@ do_sync() {
 	then
 		debug "inventory=$inventory"
 		# Replace REPOSITORY and STAGE parameters 
-		for i in $( seq 1 ${#inventory[@]} )
-		do
-			inventory[$i]="$( echo "${inventory[$i]}" | sed "s/REPOSITORY/$repo/; s/STAGE/$stage/;" )"
-		done
+		#for i in $( seq 1 ${#inventory[@]} )
+		#do
+		#	inventory[$i]="$( echo "${inventory[$i]}" | sed "s/REPOSITORY/$repo/; s/STAGE/$stage/;" )"
+		#done
+		inventory="$( echo "$inventory" | sed "s/REPOSITORY/$repo/; s/STAGE/$stage/;" )"
+		local inventory_script=$( echo "$inventory" | cut -d" " -f1 )
 
-		if [ -x "$inventory" ]
+		if [ -x "$inventory_script" ]
 		then
-			debug "Call inventory script $inventory with args '${inventory[@]:1}'"
-			eval $( ${inventory[@]} )
+			debug "Call inventory script $inventory'"
+			eval $( $inventory )
 		elif [ -e "$inventory" ]
 		then
 			debug "Parse inventory hostfile $inventory"
 			parse_ansible_hostfile $inventory
 		else
-			error "Inventory $inventory not found."
+			error "Inventory $inventory_script not found."
 			exit 15
 		fi
 	fi
