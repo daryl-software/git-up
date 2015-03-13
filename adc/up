@@ -497,6 +497,7 @@ do_sync() {
 	local before=$( git rev-parse HEAD )
 
 	# OK, then checkout repository to what we want
+	provision
 	debug "Checkout to $sync_to"
 	git checkout $( test $debug -eq 0 && echo -q ) -f $sync_to
 
