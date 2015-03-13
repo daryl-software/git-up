@@ -227,3 +227,8 @@ Tests
 The Vagrant is used to emulate an provisionning or a deploy server.
 
 
+Todo
+----
+
+* Handle big repositories: [nice blog article](http://blogs.atlassian.com/2014/05/handle-big-repositories-git/)
+
