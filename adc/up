@@ -260,7 +260,11 @@ get_current_state() {
 	chead="$( git rev-parse HEAD )"
 	set +e
 	# On which branch am I ?
-	cbranch=$( git branch -r --contains $chead | head -1 | awk '{print $3}' | cut -d/ -f2 )
+	cbranch=$( git branch -r --contains $chead | head -1 | sed "s/^[[:space:]]\+//" | awk '{print $3}' | cut -d/ -f2 )
+	if [ -z "$cbranch" ]
+	then
+		cbranch=$( git branch -r --contains $chead | head -1 | sed "s/^[[:space:]]\+//" | awk '{print $1}' | cut -d/ -f2 )
+	fi
 	debug "cbranch=$cbranch"
 	if [ -n "$cbranch" ]
 	then
@@ -276,6 +280,50 @@ get_current_state() {
 	debug "cpretty=$cpretty chead=$chead ctag='$ctag'"
 	set -e
 }
+
+
+do_guess() {
+	local branch=$1
+	local tag=$2
+	get_conf
+
+	local stage=
+	debug "Guess with tag=$tag and branch=$branch"
+
+	# First, we guess on tags
+	if [ -n "$tag" ]
+	then
+		if [ $tag_enabled -gt 0 ]
+		then
+			debug "pattern: $tag_pattern"
+			if grep -Eq "$tag_pattern" <<< "$tag"
+			then
+				stage=$tag_stage
+			fi
+		fi
+	fi
+
+	# if not found, guess on branch
+	if [ -z "$stage" ] && [ -n "$branch_name" ] && [ "$branch" = "$branch_name" ] && [ -n "$branch_to_stage" ]
+	then
+		stage=$branch_to_stage
+	fi
+
+	debug "found stage=$stage"
+
+	# Found, now check that this stage is allowed
+	if [ -n "$stage" ]
+	then
+		if is_stage_allowed $stage
+		then
+			echo "stage='$stage'"
+			exit 0
+		fi
+	fi
+	exit 17
+}
+
+
 
 do_infos() {
 	setup_provision
@@ -296,6 +344,7 @@ do_infos() {
 	echo "chead='$chead'"
 	echo "ctag='$ctag'"
 	echo "cpretty='$cpretty'"
+	exit 0
 }
 
 check_repo() {
@@ -312,14 +361,11 @@ check_repo() {
 
 	get_conf
 	
-	local allowed_stage=
-	for allowed_stage in ${allowed_stages[*]}
-	do
-		if [ "$stage" = "$allowed_stage" ]
-		then
-			return 0
-		fi
-	done
+	if is_stage_allowed $stage
+	then
+		return 0
+	fi
+
 	if [ -d "$gitdir" ]
 	then
 		warn "git dir '$gitdir' exists, removing it."
@@ -327,6 +373,20 @@ check_repo() {
 	fi
 	error "Stage <$stage> is not allowed."
 	exit 8
+}
+
+
+is_stage_allowed() {
+	local stage_to_check=$1
+	local allowed_stage=
+	for allowed_stage in ${allowed_stages[*]}
+	do
+		if [ "$stage_to_check" = "$allowed_stage" ]
+		then
+			return 0
+		fi
+	done
+	return 1
 }
 
 # Can't use cfg_parser, it's not a real INI file ...
@@ -503,6 +563,11 @@ do_sync() {
 
 	local after=$( git rev-parse HEAD )
 
+	echo
+	msg "DIFF between <$before> and <$after>"
+	git whatchanged --stat --format="%Cred author : %an --- %Cgreen date :  %ad %Creset" $before..$after
+	echo
+
 	hook "pre_deploy"
 	local_hook "pre-deploy"
 
@@ -579,6 +644,10 @@ do
 		--init)
 			shift
 			commitish="$1"
+			;;
+		--guess)
+			shift
+			do_guess $@
 			;;
 		--*)
 			warn "Parameter unknown: $1"
