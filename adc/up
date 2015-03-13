@@ -469,7 +469,7 @@ do_sync() {
 	local mutualized=$( get_stage_var mutualized )
 	
 	# use inventory script if available
-	if [ -n "$inventory" ]
+	if [ -z "$master" ] && [ -n "$inventory" ]
 	then
 		debug "inventory=$inventory"
 		# Replace REPOSITORY and STAGE parameters 
