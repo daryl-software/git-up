@@ -137,7 +137,7 @@ get_next_tag() {
 	local autotag="$( dirname $0 )/autotag.pl"
 	if type perl >/dev/null && [ -e $autotag ]
 	then
-		autotag="perl '$autotag'"
+		autotag="perl $autotag"
 	else
 		msgy "hint: install Perl for better performance ;)" >&2
 		autotag="ssh $sshopts $sshhost up autotag"
@@ -366,6 +366,7 @@ then
 	echo remoteuri=$remoteuri
 	echo remote=$remote
 	echo branch_name=$branch_name
+	echo tag=$tag
 	echo "-------------------"
 	echo hotfix=$hotfix
 	echo release=$release
@@ -383,7 +384,7 @@ fi
 if [ $diff -gt 0 ]
 then
 	gitdiff $diff
-elif [ -n "$resync" ]
+elif [ $resync -gt 0 ]
 then
 	resync
 
@@ -399,7 +400,6 @@ else
 			exit 2
 		fi
 	fi
-
 
 	gitdiff 3 $commitish $gitopts # whatchanged
 	if [ $tag -gt 0 ]
@@ -426,7 +426,7 @@ else
 			exit 7
 		fi
 	else
-		ssh $sshopts $sshhost up $upopts "$reponame" $stage sync "$commitish"
+		resync
 	fi
 	exit 0
 fi
