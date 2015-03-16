@@ -564,10 +564,13 @@ do_sync() {
 
 	local after=$( git rev-parse HEAD )
 
-	echo
-	msg "DIFF between <$before> and <$after>"
-	git whatchanged --stat --format="%Cred author : %an --- %Cgreen date :  %ad %Creset" $before..$after
-	echo
+	if [ "$before" != "$after" ]
+	then
+		echo
+		msg "DIFF between <$before> and <$after>"
+		git whatchanged --stat --format="%Cred author : %an --- %Cgreen date :  %ad %Creset" $before..$after
+		echo
+	fi
 
 	hook "pre_deploy"
 	local_hook "pre-deploy"

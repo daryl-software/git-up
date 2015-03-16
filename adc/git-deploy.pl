@@ -15,6 +15,7 @@ use Term::ANSIColor;
 use Term::ReadLine; # from libterm-readline-perl-perl
 use FileHandle;
 use Sys::Syslog qw/:standard :macros/;
+use Sys::Hostname;
 use Cwd qw/realpath/;
 # for SSH control
 use IPC::Open3;
@@ -331,7 +332,7 @@ sub rsyncto # {{{
 	my $stage = shift || undef;
 	my $try = shift || 0;
 	chomp($host);
-	my $logprefix = colored("[".get_shorthost($host)."]\t", 'bold magenta');
+	my $logprefix = colored(sprintf("%-32s", "[".get_shorthost($host)."]"), 'bold magenta');
 	my $max_try = 2;
 
 	sub put
@@ -355,17 +356,20 @@ sub rsyncto # {{{
 		$srcdir .= "/";
 	}
 
-	put "RSYNC $srcdir TO $host $/" if ($debug);
-
 	# rsync loop
 	my $cmd;
 	my $rsync_dest = $rsync_module;
-	$rsync_dest .= "/$stage" if (defined($stage));
-	$rsync_dest .= "/$repo" if (defined($repo) && $mutu);
+
+	my $relative_dest = "";
+	$relative_dest .= "/$stage" if (defined($stage));
+	$relative_dest .= "/$repo" if (defined($repo) && $mutu);
+
+	$rsync_dest .= $relative_dest;
 	
 	if ($deploymode)
 	{
-		$cmd = "$rsync $rsync_opts $srcdir rsync://$host/$rsync_module/$stage/";
+		$srcdir .= $relative_dest;
+		$cmd = "$rsync $rsync_opts $srcdir/ rsync://$host/$rsync_dest/";
 	}
 	else
 	{
@@ -379,7 +383,9 @@ sub rsyncto # {{{
 		$cmd = "$rsync $rsync_opts $srcdir rsync://localhost:$rsync_tun_port/$rsync_dest/";
 	}
 
+	put "RSYNC $srcdir TO ".$host."::$rsync_dest $/" if ($debug);
 	put "$cmd\n" if ($debug);
+
 	my $rsync_pid = open(RSYNC, "$cmd 2>&1 3>&1 |");
 	unless ($rsync_pid)
 	{
@@ -475,7 +481,7 @@ sub rsyncto # {{{
 			{
 				$percent = $n/$numfiles*100;
 			}
-			put(sprintf "\r%s%s %d/%d [%d%%]" . " "x40 ."\r", $logprefix, $s, $n, $numfiles, $percent);
+			put(sprintf "\r%s%s %d/%d [%d%%]" . " "x40 . "\r", $logprefix, $s, $n, $numfiles, $percent);
 		}
 
 		elsif (/xfer#\d+, to-check=/)
@@ -705,10 +711,10 @@ if ($opt_dryrun)
 {
 	$rsync_opts = "--dry-run $rsync_opts";
 }
-if ($debug)
-{
-	$rsync_opts = "--verbose $rsync_opts";
-}
+#if ($debug)
+#{
+#	$rsync_opts = "--verbose $rsync_opts";
+#}
 
 # Flatten rsync opts
 $rsync_opts =~ s/\n\t?/ /g;
@@ -723,6 +729,16 @@ if ($deploymode)
 	my @hosts = split(",", $servers);
 
 	hook('mid');
+
+	for (my $i=0; $i<scalar(@hosts); $i++)
+	{
+		$hosts[$i] =~ /(.+?)\./;
+		if (hostname =~ /^$1\.?/)
+		{
+			$hosts[$i] = undef;
+		}
+	}
+	@hosts = grep defined, @hosts; # removes undef
 
 	if (scalar(@hosts) > 0)
 	{
@@ -743,8 +759,6 @@ if ($deploymode)
 		# boucle sur les serveurs
 		foreach my $host (@hosts)
 		{
-			$host =~ /(.+?)\./;
-			next if ($1 eq $master);
 			my $logprefix = "[".get_shorthost($host)."] ";
 			# 
 			# Method thread
@@ -824,7 +838,7 @@ else
 		push @args, "--deploy";
 		push @args, "--repo=$repo";
 		push @args, "--stage=$stage";
-		push @args, "--source-dir=".get_remote_path()."/$stage/";
+		push @args, "--source-dir=".get_remote_path();
 		push @args, "--rsync-module=$rsync_module";
 		push @args, "--rsync-user=$rsync_user";
 		push @args, "--servers=$servers";
@@ -851,7 +865,7 @@ else
 				elsif ($log !~ /\[(\d+)\%\]/)
 				{
 					$log =~ s/\r//g;
-					print colored("[$host]", 'bold magenta')."\t$log$/" unless ($log eq "");
+					print colored(sprintf("%-32s", "[$host]"), 'bold magenta')."$log$/" unless ($log eq "");
 				}
 			}
 			elsif (/HOSTS=(.+)/)
