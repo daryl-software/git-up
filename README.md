@@ -23,11 +23,11 @@ What is it ?
 
 git-up is a tool for continuous delivery, specialized in web projects. Pipeline process is fully automated, and only current and great unix tools are used: ssh, rsync and git.
 
-It's purpose is to deliver a git project to its staging or production servers, as fast as possible, because continuous delivery need fast tools.
+Its purpose is to deliver a git project to its staging or production servers, as fast as possible, because continuous delivery needs fast tools.
 
-It is able to deliver one git repository to only one server, however he was build to deliver multi git projects to many servers, for high-traffic projects that needs many servers to be synced in parallel.
+It is able to deliver one git repository to only one server, however it was build to deliver multi git projects to many servers, for high-traffic projects that need many servers to be synced in parallel.
 
-The implementation can seem strange and heavy, but git-up was created to be simple, safe and really fast for developpers, and simple things often need complex background.
+The implementation can seem strange and heavy, but git-up was created to be simple, safe and really fast for developers, and simple things often need complex background.
 
 This project is used since years for +12 projects deployed to +20 servers. Each deployment is done in less than 10 seconds, including the rsync between your local git repo to the deployment server with a low bandwidth :)
 
@@ -35,7 +35,7 @@ This project is used since years for +12 projects deployed to +20 servers. Each 
 How ?
 -----
 
-So you have a git repository which contains a full website, you add a commit and you want to deploy it in production platform. You also want that when you push this commit to "master" branch, it is deployed to your pre-production servers, and you want to deploy to your production servers via `git up prod` command.
+So you have a git repository which contains a full website, you add a commit and you want to deploy it on the production platform. You also want that when you push this commit to "master" branch, it is deployed to your pre-production servers, and you want to deploy to your production servers via `git up prod` command.
 
 1. simple push to master branch
 
@@ -45,13 +45,13 @@ So you have a git repository which contains a full website, you add a commit and
 
         $ git up prod
 
-`git up` will fire a deploy process which is described bellow.
+`git up` will fire a deploy process which is described below.
 
 
 Flow
 ----
 
-The deliver process is quite simple, and needs only tools that are already installed in your server.
+The delivery process is quite simple, it only needs tools that are already installed on your server.
 
 
         +----------------------------------------------------------------------------------------------------------------------+
@@ -73,7 +73,7 @@ The deliver process is quite simple, and needs only tools that are already insta
         |                     |          |   +-------+--------+         |       +------------+----+  |       |           |     |
         |     +-------+       |          |   |                |         |       |                 +--------> | server#B  |     |
         |     |       |       |          |   |                |    git-sync     |                 |  |       |           |     |
-        |     | Dev#2 +-------+          |   | provisionning  +----  rsync ---> | deploy server   |  |       +-----------+     |
+        |     | Dev#2 +-------+          |   | provisioning   +----  rsync ---> | deploy server   |  |       +-----------+     |
         |     |       |       |          |   |                |    over ssh     |                 |  |                         |
         |     +-------+       |          |   |                |         |       |                 +--------> +-----------+     |
         |              ssh    |          |   +----------------+         |       +------------+----+  |       |           |     |
@@ -93,30 +93,26 @@ The deliver process is quite simple, and needs only tools that are already insta
                                                                                                                                 
 
 1. `git up` will first do some sanity checks, 
-2. then, it will compare your commits to provisionning server which contains a clone of your git project
-3. In some case, a diff or a list of changed files will be displayed
-4. the provisionning clone will checkout your project to the git ref (commit, branch, tag, ...) you tell 
-5. a SSH tunnel will be opened between the provisionning server and the deploy server
-6. the project is rsynced to the deploy server, without the .git folder
-7. the deploy server will call another script which will rsync in parallel to all your production servers
-
-
-
+2. Then, it will compare your commits to provisioning server which contains a clone of your git project
+3. In some cases, a diff or a list of changed files will be displayed
+4. The provisioning clone will checkout your project to the git ref (commit, branch, tag, ...) you specify 
+5. An SSH tunnel will be opened between the provisioning server and the deploy server
+6. The project is rsynced to the deploy server, without the .git folder
+7. The deploy server will call another script which will rsync in parallel to all your production servers
 
 
 Why so many servers ?
 ---------------------
 
-In short, for security and performance, and safer delivers.
+In short, for security, performance, and safer deliveries.
 
-The provisionning server can have many roles and can be your development server. It is the last which will have the .git folder, and his main goal is to maintain a mirror of your production or staging code. You can use it as a demo environment ! With him, many checks are done locally, in your LAN, it only use some disk space, no more than a clone of your git project.
+The provisioning server can have many roles and can be your development server. It is the last which will have the .git folder, and his main goal is to maintain a mirror of your production or staging code. You can use it as a demo environment! Many checks are done locally with it, on your LAN, it only uses some disk space, not more than a clone of your git project.
 
-It is also a security step. Thanks to him, developpers will not have access to your production infrastructure. A lock is created at this step, to disallow split-brain or split-things.
+It is also a security step. Thanks to it, developers will not have access to your production infrastructure. A lock is created at this step, to disallow split-brain or split-things.
 
 Finally, it's mandatory to have only one source to rsync to production servers, and to only have one deployment at a time.
 
-The "deliver server" is one of your production server. It can be a spare or a job server, but he has to be near your production servers. If down, any other production server can take the role. A first sync to this server must be done, to do the parallel sync to all servers.
-
+The "deliver server" is one of your production servers. It can be a spare or a job server, but it has to be close to your production servers. In case it's down, any other production server can take the role. A first sync to this server must be done, to do the parallel sync to all servers.
 
 
 Installation
@@ -126,18 +122,18 @@ Installation
 
 `curl -sSL http://bit.ly/1MnONi4 | sh`
 
-or if you want to install it to another folder :
+or if you want to install it to another folder:
 
 `curl -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir ~/.git-up`
 
-It will setup `git up` alias, and download scripts to `~/.git-up` folder.
+It will setup `git up` alias, and download scripts to your `~/.git-up` folder.
 
 
 ### Server side
 
-We use [Ansible](http://www.ansible.com/) and you just have to add a role to your playbooks :
-- `git-up-provision` : to configure the provisionning server
-- `git-up-deployable` : for all your production servers
+We use [Ansible](http://www.ansible.com/) and you just have to add a role to your playbooks:
+- `git-up-provision`: to configure the provisioning server
+- `git-up-deployable`: for all your production servers
 
 If you use another orchestration tool, there is not so much to do.
 
@@ -169,11 +165,12 @@ Include git-up-deployable this way :
     }
 ```
 
+
 #### Prerequisites
 
-Developpers than know git, and the ones who have to deliver needs to know terminal and ssh.
+Developpers than know git, and the ones who have to deliver need to know terminal and ssh.
 
-Ansible roles are available to help you setup provisionning and destination servers. They need a Debian server, but it's up to you to hack them for any other distribution, it's not a big deal, only few tools to have.
+Ansible roles are available to help you setup your provisioning and destination servers. They need a Debian server, but it's up to you to hack them for any other distribution, it's not a big deal, only a few tools are needed.
 
 - ssh
 - perl
@@ -196,35 +193,34 @@ vim .gitolite.rc # and change $GL_ADC_PATH to "git-up/adc"
 Configuration
 -------------
 
-Default configuration is set in `conf.d/defaults.cfg` and can be overrided by your own config files in your own git
+Default configuration is set in `conf.d/defaults.cfg` and can be overriden by your own config files in your own git
 repository.
 You have to clone your git-up-config repository to `git-up/../git-up-config` folder on the gitolite/gitlab server.
-
-
 
 
 Usage
 -----
 
-- `git up <env> <commit-ish>` : default to env=preprod and commit-ish=origin/master
+- `git up <env> <commit-ish>`: default to env=preprod and commit-ish=origin/master
 
 Since we can't trigger post-receive hook when nothing is pushed, we can re-deploy this way:
 - `ssh <remote uri> up <env> <commit-ish>`
 However, to do that we need [ADCs](http://gitolite.com/gitolite/g2/ADCs.html) which is a feature only proposed by
 Gitolite. An [issue#213](https://github.com/gitlabhq/gitlab-shell/issues/213) is proposed on gitlab-shell.
 
+
 Security
 --------
 
 SSH is used for all connections. 
 
-Developpers or anyone who need to deliver must have there ssh keys authorized in the provisionning server. That's all you need to do, easy !
+Developers or anyone that needs to deliver must have their ssh keys authorized in the provisioning server. That's all you need to do, easy!
 
 
 Tests
 -----
 
-The Vagrant is used to emulate an provisionning or a deploy server.
+Vagrant is used to emulate an provisioning or a deploy server.
 
 
 Todo
