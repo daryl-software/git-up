@@ -38,7 +38,8 @@ do
 			fi
 			;;
 		*)
-			shift
+			echo "Unknown parameter '$1'"
+			exec $0 --help
 			;;
 	esac
 done
