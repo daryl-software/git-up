@@ -32,7 +32,6 @@ no warnings 'closure';
 my $rsync = "/usr/bin/rsync";
 my $rsync_opts = "
 	-rlptgoD
-	--checksum
 	--progress
 	--stats 
 	--human-readable 
