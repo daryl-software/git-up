@@ -21,14 +21,21 @@ then
 	# "composer install" only if composer.lock is present AND is in the diff
 
 	composer_update=0
-	if [ -n "$before" ] && [ -n "$after" ]
+	composererror=0
+
+	if [ ! -d vendor ]
 	then
-		if git diff --name-only $before $after | grep -q ^composer\.lock
+		composer_update=1
+	else
+		if [ -n "$before" ] && [ -n "$after" ]
 		then
-			composer_update=1
+			if git diff --name-only $before $after | grep -q ^composer\.lock
+			then
+				composer_update=1
+			fi
 		fi
 	fi
-	composererror=0
+
 	if [ -e composer.lock ] && [ $composer_update -gt 0 ]
 	then
 		unset GIT_DIR

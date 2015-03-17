@@ -48,6 +48,7 @@ diff=0
 upopts=
 infosonly=0
 commitish=
+commitset=0
 newtag=
 hotfix=1
 release=0
@@ -180,10 +181,9 @@ get_next_tag() {
 		autotag="ssh $sshopts $sshhost up autotag"
 	fi
 	debug "autotag: $autotag"
-	local tag_pattern=
 	debug "hotfix=$hotfix release=$release pattern=$tag_pattern"
 
-	# with tag pattern, grep all
+	# without tag pattern, grep all
 	if [ -z "$tag_pattern" ]
 	then
 		tag_pattern=".*"
@@ -376,6 +376,7 @@ do
 			elif [ -z "$commitish" ]
 			then
 				commitish="$1"
+				commitset=1
 			else
 				Usage
 			fi
@@ -392,6 +393,7 @@ fi
 if [ -z "$commitish" ]
 then
 	commitish=origin/master
+	commitset=0
 fi
 
 check_prerequisites
@@ -413,6 +415,7 @@ then
 	echo remote=$remote
 	echo branch_name=$branch_name
 	echo tag=$tag
+	echo tag_pattern=$tag_pattern
 	echo "-------------------"
 	echo hotfix=$hotfix
 	echo release=$release
@@ -439,19 +442,21 @@ else
 	install_hooks
 
 	check_pushed
-	if [ $tag -gt 0 ]
-	then
-		get_next_tag
-		if [ -z "$newtag" ]
-		then
-			echo "An unexpected error occurred while computing next tag."
-			exit 2
-		fi
-	fi
 
 	gitdiff 3 $commitish $gitopts # whatchanged
-	if [ $tag -gt 0 ]
+	if [ $tag -gt 0 -a $commitset -eq 0 ]
 	then
+		if [ $commitset -gt 0 ] && grep -qE "$tag_pattern" <<< $commitish
+		then
+			newtag=$commitish
+		else
+			get_next_tag
+			if [ -z "$newtag" ]
+			then
+				echo "An unexpected error occurred while computing next tag."
+				exit 2
+			fi
+		fi
 		blockcolor="\033[44m\033[1;37m"
 		echo -n $blockcolor
 		echo -n "|--------------------------------------------------------------------|"
