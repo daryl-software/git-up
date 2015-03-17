@@ -98,7 +98,11 @@ then
 	git config --global alias.up "!$installdir/git-up"
 fi
 
-$installdir/git-up update-hooks
+cd - >/dev/null
+if git rev-parse --show-toplevel 2>/dev/null
+then
+	$installdir/git-up update-hooks
+fi
 
 if [ -z $(which git-up) ] && [ "$alias" -eq 0 ]
 then
