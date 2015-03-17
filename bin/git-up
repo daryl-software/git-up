@@ -365,6 +365,7 @@ do
 			then
 				error "Self-update FAILED!"
 			fi
+			exit 0
 			;;
 		update-hooks)
 			install_hooks
