@@ -25,17 +25,17 @@ git-up is a tool for continuous delivery, specialized in web projects. Pipeline 
 
 Its purpose is to deliver a git project to its staging or production servers, as fast as possible, because continuous delivery needs fast tools.
 
-It is able to deliver one git repository to only one server, however it was build to deliver multi git projects to many servers, for high-traffic projects that need many servers to be synced in parallel.
+It is able to deliver one git repository to only one server, however it was built to deliver multi git projects to many servers, for high-traffic projects that need many servers to be synced in parallel.
 
 The implementation can seem strange and heavy, but git-up was created to be simple, safe and really fast for developers, and simple things often need complex background.
 
-This project is used since years for +12 projects deployed to +20 servers. Each deployment is done in less than 10 seconds, including the rsync between your local git repo to the deployment server with a low bandwidth :)
+This project is used in production since years for +12 projects and deployed to +20 servers. Each deployment is done in less than 10 seconds, including the rsync between your local git repo to the deployment server with a low bandwidth :)
 
 
 How ?
 -----
 
-So you have a git repository which contains a full website, you add a commit and you want to deploy it on the production platform. You also want that when you push this commit to "master" branch, it is deployed to your pre-production servers, and you want to deploy to your production servers via `git up prod` command.
+So you have a git repository that contains a full website, you add a commit and you want to deploy it to the production platform. You also want to deploy to your pre-production servers when you push this commit to "master" branch, and you want to deploy to your production servers via `git up prod` command.
 
 1. simple push to master branch
 
@@ -96,8 +96,8 @@ The delivery process is quite simple, it only needs tools that are already insta
 2. Then, it will compare your commits to provisioning server which contains a clone of your git project
 3. In some cases, a diff or a list of changed files will be displayed
 4. The provisioning clone will checkout your project to the git ref (commit, branch, tag, ...) you specify 
-5. An SSH tunnel will be opened between the provisioning server and the deploy server
-6. The project is rsynced to the deploy server, without the .git folder
+5. An SSH tunnel will be opened between the provisioning server and the deployment server
+6. The project is rsynced to the deployment server, without the .git folder
 7. The deploy server will call another script which will rsync in parallel to all your production servers
 
 
@@ -106,13 +106,13 @@ Why so many servers ?
 
 In short, for security, performance, and safer deliveries.
 
-The provisioning server can have many roles and can be your development server. It is the last which will have the .git folder, and his main goal is to maintain a mirror of your production or staging code. You can use it as a demo environment! Many checks are done locally with it, on your LAN, it only uses some disk space, not more than a clone of your git project.
+The provisioning server can have many roles and can be your development server. It is the last that will have the .git folder, and its main goal is to maintain a mirror of your production or staging code. You can use it as a demo environment! Many checks are done locally with it, on your LAN, it only uses some disk space, not more than a clone of your git project.
 
 It is also a security step. Thanks to it, developers will not have access to your production infrastructure. A lock is created at this step, to disallow split-brain or split-things.
 
 Finally, it's mandatory to have only one source to rsync to production servers, and to only have one deployment at a time.
 
-The "deliver server" is one of your production servers. It can be a spare or a job server, but it has to be close to your production servers. In case it's down, any other production server can take the role. A first sync to this server must be done, to do the parallel sync to all servers.
+The "delivery server" is one of your production servers. It can be a spare or a job server, but it has to be close to your production servers. In case it's down, any other production server can take the role. A first sync to this server must be done, to do the parallel sync to all servers.
 
 
 Installation
@@ -193,8 +193,7 @@ vim .gitolite.rc # and change $GL_ADC_PATH to "git-up/adc"
 Configuration
 -------------
 
-Default configuration is set in `conf.d/defaults.cfg` and can be overriden by your own config files in your own git
-repository.
+Default configuration is set in `conf.d/defaults.cfg` and can be overriden by your own config files in your own git repository.
 You have to clone your git-up-config repository to `git-up/../git-up-config` folder on the gitolite/gitlab server.
 
 
@@ -220,7 +219,7 @@ Developers or anyone that needs to deliver must have their ssh keys authorized i
 Tests
 -----
 
-Vagrant is used to emulate an provisioning or a deploy server.
+Vagrant is used to emulate a provisioning or deployment server.
 
 
 Todo
