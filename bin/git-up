@@ -28,7 +28,7 @@ set -e
 shopt -s xpg_echo
 
 
-# 
+#
 # CONFIG
 #
 # Search git-up on those remotes :
@@ -55,7 +55,7 @@ release=0
 revertto=
 resync=0
 
-# 
+#
 # FUNCTIONS
 #
 
@@ -129,7 +129,7 @@ check_connection() {
 
 
 up_to_date() {
-	git fetch --quiet origin 
+	git fetch --quiet origin
 }
 
 
@@ -316,7 +316,7 @@ do
 				exit 2
 			fi
 			echo "Self-update in $install_dir ..."
-			curl -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir "$install_dir"
+			curl -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir "$install_dir" --no-alias
 			exit $?
 			;;
 		# git opts
