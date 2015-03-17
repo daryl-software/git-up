@@ -322,6 +322,17 @@ sub get_shorthost
 	return $host;
 }
 
+sub stage_folder
+{
+	my $repo = shift || undef;
+	my $stage = shift || undef;
+	my $mutu = shift;
+	my $folder = "";
+	$folder .= "/$stage" if (defined($stage));
+	$folder .= "/$repo" if (defined($repo) && $mutu);
+	return $folder;
+}
+
 # Main function to rsync files to 1 remote or many
 sub rsyncto # {{{
 {
@@ -360,22 +371,17 @@ sub rsyncto # {{{
 	my $cmd;
 	my $rsync_dest = $rsync_module;
 
-	my $relative_dest = "";
-	$relative_dest .= "/$stage" if (defined($stage));
-	$relative_dest .= "/$repo" if (defined($repo) && $mutu);
-
-	$rsync_dest .= $relative_dest;
+	$rsync_dest .= stage_folder($repo, $stage, $mutu);
 	
 	if ($deploymode)
 	{
-		$srcdir .= $relative_dest;
 		$cmd = "$rsync $rsync_opts $srcdir/ rsync://$host/$rsync_dest/";
 	}
 	else
 	{
 		if (-e $srcdir.'.rsync_excludes')
 		{
-			$rsync_opts .= " --exclude-from=$srcdir/.rsync_excludes ";
+			$rsync_opts .= " --exclude-from=$srcdir.rsync_excludes ";
 		}
 	
 		# compression only over internet, and not between slaves
@@ -552,9 +558,9 @@ sub hook
 	my $hook = "$hooksdir/$hooktype-deploy";
 	
 	my $cwd = getcwd;
-	chdir ($sourcedir) or die $!;
+	chdir ($sourcedir) or die "$!: ".$sourcedir;
 
-	logdebug ("Run hook $hook if exists$/");
+	logdebug ("Run hook $sourcedir/$hook if exists$/");
 	if (-x $hook)
 	{
 		loginfo3 "Execute $hooktype-deploy hook ...";
@@ -838,7 +844,7 @@ else
 		push @args, "--deploy";
 		push @args, "--repo=$repo";
 		push @args, "--stage=$stage";
-		push @args, "--source-dir=".get_remote_path();
+		push @args, "--source-dir=".get_remote_path().stage_folder($repo, $stage, $mutu);
 		push @args, "--rsync-module=$rsync_module";
 		push @args, "--rsync-user=$rsync_user";
 		push @args, "--servers=$servers";
