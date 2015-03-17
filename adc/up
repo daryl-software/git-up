@@ -580,7 +580,7 @@ do_sync() {
 		echo
 	fi
 
-	hook "pre_deploy"
+	hook "pre_deploy" $before $after $( get_user )
 	local_hook "pre-deploy"
 
 	if [ -z "$master" ]

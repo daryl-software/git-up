@@ -5,6 +5,9 @@
 stage=$1
 repo=$2
 gitdir=$3
+before=$4
+after=$5
+user=$6
 
 set -e
 
@@ -12,9 +15,21 @@ if [ -d "$gitdir" ]
 then
 	cd "$gitdir" || exit 2
 
+	#
 	# composer
+	#
+	# "composer install" only if composer.lock is present AND is in the diff
+
+	composer_update=0
+	if [ -n "$before" ] && [ -n "$after" ]
+	then
+		if git diff --name-only $before $after | grep -q ^composer\.lock
+		then
+			composer_update=1
+		fi
+	fi
 	composererror=0
-	if [ -e composer.lock ]
+	if [ -e composer.lock ] && [ $composer_update -gt 0 ]
 	then
 		unset GIT_DIR
 		unset GIT_WORK_TREE
