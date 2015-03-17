@@ -10,4 +10,5 @@ deploy_conf:
   ssh_pub:
   hosts:
   - 127.0.0.1
+  - ::1
 
