@@ -12,6 +12,7 @@ set -e
 installdir=~/.git-up
 gitupbaseurl=https://raw.githubusercontent.com/ezweb/git-up/
 branch=master
+hooksfolder=hooks
 
 
 while [ $# -gt 0 ]
@@ -69,13 +70,22 @@ do
 	chmod u+x "$script"
 done
 
+test -d $hooksfolder || mkdir $hooksfolder
+for hook in pre-commit
+do
+	echo "- hook $hook"
+	dsthook="$hooksfolder/$hook"
+	curl -o "$dsthook" -# $gitupbaseurl$branch/hooks/$hook
+	chmod u+x "$dsthook"
+done
+
 if type realpath >/dev/null 2>&1
 then
 	installdir=`realpath $installdir`
 fi
 
-echo ">> Setup git alias 'up' ..."
+echo ">> Set git alias 'up'."
 git config --global alias.up "!$installdir/git-up"
 #git config --global alias.prod "up prod"
 
-echo ">> Done. You can 'git up something' now !"
+echo ">> Done. You can now 'git up <something>' !"

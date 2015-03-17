@@ -48,12 +48,11 @@ upopts=
 infosonly=0
 commitish=
 newtag=
-
-# deprecated?
 hotfix=1
 release=0
 revertto=
 resync=0
+GITROOT=
 
 # 
 # FUNCTIONS
@@ -100,6 +99,11 @@ check_prerequisites() {
 			error "the tool '$tool' is required."
 		fi
 	done
+	GITROOT=$( git rev-parse --show-toplevel )
+	if [ -z "$GITROOT" ]
+	then
+		error "Called from outside a git repository."
+	fi
 }
 
 
@@ -130,6 +134,40 @@ check_connection() {
 
 up_to_date() {
 	git fetch --quiet origin 
+}
+
+
+install_hooks() {
+	echo "install hooks"
+	for hook in $( dirname $0 )/hooks/*
+	do
+		hk=$( basename $hook )
+		mustbeinstalled=0
+		src="$GITROOT/.git/hooks/$hook" 
+		dst="$GITROOT/.git/hooks/$hk"
+		#echo "- $hk"
+		#if ! test -h "$dst"
+		#then
+		#	mustbeinstalled=1
+		#else
+		#	linkedto=$( readlink -f "$dst" )
+		#	if [ "$linkedto" != "$src" ]
+		#	then
+		#		mustbeinstalled=1
+		#		rm -f "$dst"
+		#	fi
+		#fi
+		#if [ -e "$dst" ]
+		#then
+		#	echo "Warning: remove $dst"
+		#	rm -f "$dst"
+		#	mustbeinstalled=1
+		#fi
+		#if [ $mustbeinstalled -gt 0 ]
+		#then
+		#	ln -s "$src" "$dst"
+		#fi
+	done
 }
 
 
@@ -355,6 +393,8 @@ get_remote
 #check_connection
 
 up_to_date
+
+install_hooks
 
 fetch_info
 
