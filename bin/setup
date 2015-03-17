@@ -98,6 +98,8 @@ then
 	git config --global alias.up "!$installdir/git-up"
 fi
 
+$installdir/git-up update-hooks
+
 if [ -z $(which git-up) ] && [ "$alias" -eq 0 ]
 then
 	echo ">> You need to add $installdir to your PATH before you can 'git up'"

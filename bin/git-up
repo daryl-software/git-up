@@ -353,11 +353,16 @@ do
 				echo "Current install-dir not found ($install_dir)."
 				exit 2
 			fi
-			echo "Self-update in $install_dir ..."
-			if curl -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir "$install_dir" --no-alias
+
+			setupopts=
+			if ! git config --global alias.up >/dev/null
 			then
-				exec $0 update-hooks
-			else
+				setupopts="--no-alias"
+			fi
+
+			echo "Self-update in $install_dir ..."
+			if ! curl -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir	"$install_dir" $setupopts
+			then
 				error "Self-update FAILED!"
 			fi
 			;;
