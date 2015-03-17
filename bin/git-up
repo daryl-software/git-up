@@ -20,6 +20,7 @@
 #
 #SPECIALS:
 #    self-update             : self-update :)
+#    update-hooks            : only update local hooks
 #
 # https://github.com/ezweb/git-up
 
@@ -28,7 +29,7 @@ set -e
 shopt -s xpg_echo
 
 
-# 
+#
 # CONFIG
 #
 # Search git-up on those remotes :
@@ -54,7 +55,7 @@ revertto=
 resync=0
 GITROOT=
 
-# 
+#
 # FUNCTIONS
 #
 
@@ -99,7 +100,6 @@ check_prerequisites() {
 			error "the tool '$tool' is required."
 		fi
 	done
-	GITROOT=$( git rev-parse --show-toplevel )
 	if [ -z "$GITROOT" ]
 	then
 		error "Called from outside a git repository."
@@ -133,40 +133,39 @@ check_connection() {
 
 
 up_to_date() {
-	git fetch --quiet origin 
+	git fetch --quiet origin
 }
 
 
 install_hooks() {
-	echo "install hooks"
 	for hook in $( dirname $0 )/hooks/*
 	do
-		hk=$( basename $hook )
-		mustbeinstalled=0
-		src="$GITROOT/.git/hooks/$hook" 
-		dst="$GITROOT/.git/hooks/$hk"
-		#echo "- $hk"
-		#if ! test -h "$dst"
-		#then
-		#	mustbeinstalled=1
-		#else
-		#	linkedto=$( readlink -f "$dst" )
-		#	if [ "$linkedto" != "$src" ]
-		#	then
-		#		mustbeinstalled=1
-		#		rm -f "$dst"
-		#	fi
-		#fi
-		#if [ -e "$dst" ]
-		#then
-		#	echo "Warning: remove $dst"
-		#	rm -f "$dst"
-		#	mustbeinstalled=1
-		#fi
-		#if [ $mustbeinstalled -gt 0 ]
-		#then
-		#	ln -s "$src" "$dst"
-		#fi
+		local hk=$( basename $hook )
+		local mustbeinstalled=0
+		local dst="$GITROOT/.git/hooks/$hk"
+		if [ ! -h "$dst" ]
+		then
+			mustbeinstalled=1
+		else
+			local linkedto=$( readlink -f "$dst" )
+			if [ "$linkedto" != "$hook" ]
+			then
+				mustbeinstalled=1
+				rm -f "$dst"
+			fi
+		fi
+		if [ -f "$dst" ] && [ ! -h "$dst" ]
+		then
+			echo "Warning: remove $dst"
+			ls -l $dst
+			rm -f "$dst"
+			mustbeinstalled=1
+		fi
+		if [ $mustbeinstalled -gt 0 ]
+		then
+			echo "- install hook $hk"
+			ln -s "$hook" "$dst"
+		fi
 	done
 }
 
@@ -304,6 +303,7 @@ gitdiff() {
 }
 
 
+GITROOT=$( git rev-parse --show-toplevel )
 gitopts=""
 while [ $# -gt 0 ]
 do
@@ -354,8 +354,16 @@ do
 				exit 2
 			fi
 			echo "Self-update in $install_dir ..."
-			curl -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir "$install_dir"
-			exit $?
+			if curl -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir "$install_dir" --no-alias
+			then
+				exec $0 update-hooks
+			else
+				error "Self-update FAILED!"
+			fi
+			;;
+		update-hooks)
+			install_hooks
+			exit
 			;;
 		# git opts
 		-*)
@@ -394,8 +402,6 @@ get_remote
 
 up_to_date
 
-install_hooks
-
 fetch_info
 
 if [ $debug -gt 0 ]
@@ -430,6 +436,8 @@ then
 
 # DEPLOY
 else
+	install_hooks
+
 	check_pushed
 	if [ $tag -gt 0 ]
 	then
