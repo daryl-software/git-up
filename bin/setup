@@ -37,6 +37,9 @@ do
 				exec $0 --help
 			fi
 			;;
+		--help)
+			exec $0 --help
+			;;
 		*)
 			echo "Unknown parameter '$1'"
 			exec $0 --help
