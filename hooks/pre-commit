@@ -1,0 +1,107 @@
+#!/bin/bash
+# - Check syntax for some scripting language
+# - check trailing whitespace rules, but only warn
+#
+
+# Redirect output to stderr.
+exec 1>&2
+
+
+against=HEAD
+against=e7f3561cacd53041585e0fe2001fe1856f6e6b9b
+gotphp=0
+gotperl=0
+gotbash=0
+gotpython=0
+forbiddenext='\.(swp|swo|pyc|pyo)$'
+
+# pre-requisites
+if type -f php >/dev/null 
+then
+	gotphp=1
+fi
+if type -f perl >/dev/null 
+then
+	gotperl=1
+fi
+if type -f bash >/dev/null 
+then
+	gotbash=1
+fi
+if type -f python >/dev/null 
+then
+	gotpython=1
+fi
+
+set -e # stop on error
+
+# Personnal pre-commit hooks
+[ -x ~/.git/hooks/pre-commit ] && ~/.git/hooks/pre-commit
+
+git diff --cached --name-only $against | while read f
+do
+	if [ ! -e "$f" ]
+	then
+		echo "$f : removed, skip syntax check"
+		continue
+	fi
+
+	if [ "$f" != "${f%.php}" ]
+	then
+		if [ $gotphp -gt 0 ]
+		then
+			# si check failed, relance avec affichage
+			php -l "$f" >/dev/null || php -l "$f"
+		else
+			echo "Warn: syntax check not available for PHP"
+		fi
+
+	elif [ "$f" != "${f%.pl}" -o "$f" != "${f%.pm}" ]
+	then
+		if [ $gotperl -gt 0 ]
+		then
+			perl -c "$f" 2>/dev/null || perl -c "$f"
+		else
+			echo "Warn: syntax check not available for Perl"
+		fi
+
+	elif [ "$f" != "${f%.sh}" ]
+	then
+		if [ $gotbash -gt 0 ]
+		then
+			bash -n "$f"
+		else
+			echo "Warn: syntax check not available for Bash"
+		fi
+
+	elif [ "$f" != "${f%.py}" ]
+	then
+		if [ $gotpython -gt 0 ]
+		then
+			python -m py_compile "$f"
+		else
+			echo "Warn: syntax check not available for Python"
+		fi
+	elif [ "$f" = "composer.json" ]
+	then
+		composer validate
+	fi
+
+	# forbidden files
+	if echo "$f" | grep -qE "$forbiddenext"
+	then
+		echo "WARNING: FORBIDDEN FILE '$f'"
+		false
+	fi
+done
+
+# do not fail on trailing whitespace, only warn
+git diff-index --check --cached $against -- || true
+
+# call local pre-commit hook
+if [ -x .hooks/pre-commit ]
+then
+	exec .hooks/pre-commit
+fi
+exit 0
+
