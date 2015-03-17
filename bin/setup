@@ -1,18 +1,18 @@
 #!/bin/sh
-# Usage: setup [--install-dir folder] [--branch master]
+# Usage: setup [--install-dir folder] [--branch master] [--no-alias]
 # Script to setup your global git configuration, to be able to use git-up
 # https://github.com/ezweb/git-up
 
 [ "$1" = "--help" ] && { sed -n -e '/^# Usage:/,/^$/ s/^# \?//p' < $0; exit; }
 set -e
 
-# 
+#
 # CONFIG
 #
 installdir=~/.git-up
 gitupbaseurl=https://raw.githubusercontent.com/ezweb/git-up/
 branch=master
-
+alias=1
 
 while [ $# -gt 0 ]
 do
@@ -36,6 +36,10 @@ do
 			else
 				exec $0 --help
 			fi
+			;;
+		--no-alias)
+			shift
+			alias=0
 			;;
 		--help)
 			exec $0 --help
@@ -78,8 +82,15 @@ then
 	installdir=`realpath $installdir`
 fi
 
-echo ">> Setup git alias 'up' ..."
-git config --global alias.up "!$installdir/git-up"
-#git config --global alias.prod "up prod"
+if [ "$alias" -eq 1 ]
+then
+	echo ">> Setup git alias 'up' ..."
+	git config --global alias.up "!$installdir/git-up"
+fi
 
-echo ">> Done. You can 'git up something' now !"
+if [ -z $(which git-up) ] && [ "$alias" -eq 0 ]
+then
+	echo ">> You need to add $installdir to your PATH before you can 'git up'"
+else
+	echo ">> Done. You can 'git up something' now !"
+fi
