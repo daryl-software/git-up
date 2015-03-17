@@ -35,7 +35,6 @@ my $rsync_opts = "
 	--progress
 	--stats 
 	--human-readable 
-	--chmod=Du=rwx,Fug+r,Dg=rwxs
 	--one-file-system
 	--delay-updates
 	--delete-delay

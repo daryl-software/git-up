@@ -561,6 +561,15 @@ do_sync() {
 	debug "Checkout to $sync_to"
 	git checkout $( test $debug -eq 0 && echo -q ) -f $sync_to
 
+	# Fix permissions
+	if [ $fix_permissions -gt 0 ]
+	then
+		debug "fix permissions in $gitdir"
+		#find $gitdir -type f -print0 | xargs -0 chmod ug+r
+		find $gitdir -type d -print0 | xargs -0 chmod u=rwx,g=rwxs
+	fi
+	
+
 	local after=$( git rev-parse HEAD )
 
 	if [ "$before" != "$after" ]
