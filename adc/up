@@ -360,18 +360,24 @@ check_repo() {
 	fi
 
 	get_conf
-	
-	if is_stage_allowed $stage
-	then
-		return 0
-	fi
 
-	if [ -d "$gitdir" ]
+	if is_repo_allowed $repo
 	then
-		warn "git dir '$gitdir' exists, removing it."
-		rm -rf "$gitdir"
+		if is_stage_allowed $stage
+		then
+			return 0
+		else
+			error "Stage <$stage> is not allowed."
+		fi
+
+		if [ -d "$gitdir" ]
+		then
+			warn "git dir '$gitdir' exists, removing it."
+			rm -rf "$gitdir"
+		fi
+	else
+		error "Repository <$repo> is not allowed."
 	fi
-	error "Stage <$stage> is not allowed."
 	exit 8
 }
 
@@ -387,6 +393,19 @@ is_stage_allowed() {
 		fi
 	done
 	return 1
+}
+
+is_repo_allowed() {
+	local repo_to_check=$1
+	local disabled_repo=
+	for disabled_repo in ${repositories_disabled[@]}
+	do
+		if [ "$disabled_repo" = "$repo_to_check" ]
+		then
+			return 1
+		fi
+	done
+	return 0
 }
 
 # Can't use cfg_parser, it's not a real INI file ...

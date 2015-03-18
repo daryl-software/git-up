@@ -98,15 +98,16 @@ then
 	git config --global alias.up "!$installdir/git-up"
 fi
 
-cd - >/dev/null
-if git rev-parse --show-toplevel 2>/dev/null
-then
-	$installdir/git-up update-hooks
-fi
-
 if [ -z $(which git-up) ] && [ "$alias" -eq 0 ]
 then
 	echo ">> You need to add $installdir to your PATH before you can 'git up'"
 else
 	echo ">> Done. You can 'git up something' now !"
 fi
+
+cd - >/dev/null
+if git rev-parse --show-toplevel 2>/dev/null
+then
+	$installdir/git-up update-hooks
+fi
+
