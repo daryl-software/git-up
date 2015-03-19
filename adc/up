@@ -288,6 +288,13 @@ do_guess() {
 	get_conf
 
 	local stage=
+
+	# From post-receive hook, $branch can be empty if there is only a tag
+	if [ -z "$tag" ]
+	then
+		tag="$branch"
+	fi
+
 	debug "Guess with tag=$tag and branch=$branch"
 
 	# First, we guess on tags
