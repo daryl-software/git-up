@@ -495,6 +495,20 @@ get_user() {
 	fi
 }
 
+is_super_user() {
+	local me=$( get_user )
+	local u=
+	get_conf
+	for u in ${superusers[@]}
+	do
+		if [ "$u" = "$me" ]
+		then
+			debug "$u is a super user."
+			return 0
+		fi
+	done
+	return 1
+}
 
 create_lock() {
 	set_lockfile
@@ -553,6 +567,27 @@ do_sync() {
 	local master=$( get_stage_var master )
 	local servers=$( get_stage_var servers )
 	local mutualized=$( get_stage_var mutualized )
+
+	# Not Friday
+	if [ $allowfriday -eq 0 ] && [ "$( date +%u )" = "5" ] && [ "$( date +%H )" -gt 6 ] && ! is_super_user
+	then
+		echo "\033[41m\033[1m" >&2
+		cat <<EOF >&2
+┐┌┐┌┐
+┘└┘└┘ ╲ο̷ފ
+┐┌┐┌┐ ／ 
+┘└┘└┘ノ)
+┐┌┐┌┐ 
+┘└┘└┘
+┐┌┐┌┐ Sorry, it's friday.
+┘└┘└┘
+┐┌┐┌┐ 
+│││││
+┴┴┴┴┴ 
+EOF
+		echo "\033[0m" >&2
+		exit 42
+	fi
 	
 	# use inventory script if available
 	if [ -z "$master" ] && [ -n "$inventory" ]
@@ -644,11 +679,25 @@ do_sync() {
 	fi
 
 	debug "$sync_cmd"
-	$sync_cmd
-
-	hook "post_deploy" $before $after $( get_user )
-
-	cleanup
+	if $sync_cmd
+	then
+		hook "post_deploy" $before $after $( get_user )
+		echo "\033[40m\033[1;34m" >&2
+		cat <<EOF
+╲╭━━━━╮╲╲
+╲┃╭╮╭╮┃╲╲
+┗┫┏━━┓┣┛╲
+╲┃╰━━╯┃━━
+╲╰┳━━┳╯╲╲╲╲╲╲╲╲╲
+╲╲┛╲╲┗╲╲╲╲╲╲╲╲╲
+EOF
+		echo "\033[0m" >&2
+		cleanup
+	else
+		cleanup
+		error "FAILED"
+		exit 3
+	fi
 }
 
 # 
