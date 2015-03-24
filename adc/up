@@ -347,6 +347,8 @@ do_infos() {
 	fi
 	echo "branch_name='$branch_name'"
 	echo "branch_stage='$branch_stage'"
+	local color="color_$stage"
+	echo -E "color='${!color}'"
 
 	echo "chead='$chead'"
 	echo "ctag='$ctag'"

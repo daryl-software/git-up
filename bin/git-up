@@ -223,6 +223,10 @@ fetch_info() {
 	fi
 
 	local blockcolor="\033[44m\033[1;37m"
+	if [ -n "$color" ]
+	then
+		blockcolor="$color"
+	fi
 	echo -n $blockcolor
 	echo -n "|--------------------------------------------------------------------|"
 	echo "\033[0m"
@@ -255,7 +259,7 @@ fetch_info() {
 
 check_pushed() {
 	local ref=$( git rev-parse $commitish )
-	if git cherry | grep -q "$ref$"
+	if git cherry 2>/dev/null | grep -q "$ref$"
 	then
 		commits=$( git cherry | wc -l )
 		m="You have to push your commits ! ($commits commit"
