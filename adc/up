@@ -592,7 +592,8 @@ EOF
 	fi
 	
 	# use inventory script if available
-	if [ -z "$master" ] && [ -n "$inventory" ]
+	local oldmaster="$master"
+	if [ -n "$inventory" ]
 	then
 		debug "inventory=$inventory"
 		# Replace REPOSITORY and STAGE parameters 
@@ -615,6 +616,12 @@ EOF
 			error "Inventory $inventory_script not found."
 			exit 15
 		fi
+	fi
+
+	# override master if it is forced in config file
+	if [ -n "$oldmaster" ]
+	then
+		master="$oldmaster"
 	fi
 
 	local before=$( git rev-parse HEAD )
