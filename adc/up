@@ -453,7 +453,7 @@ parse_ansible_hostfile() {
 
 
 set_lockfile() {
-	lockfile="/tmp/git_up_${repo}_${stage}.lock"
+	lockfile="/tmp/git_up_deploy.lock"
 }
 
 
@@ -581,7 +581,7 @@ do_sync() {
 ┘└┘└┘ノ)
 ┐┌┐┌┐ 
 ┘└┘└┘
-┐┌┐┌┐ Sorry, it's friday.
+┐┌┐┌┐ Sorry, it's friday   凸( ͡° ͜ʖ ͡°)凸
 ┘└┘└┘
 ┐┌┐┌┐ 
 │││││
@@ -704,7 +704,7 @@ EOF
 		cleanup
 	else
 		cleanup
-		error "FAILED"
+		error "FAILED     凸( ͡° ͜ʖ ͡°)凸"
 		exit 3
 	fi
 }
