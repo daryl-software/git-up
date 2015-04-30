@@ -148,7 +148,14 @@ install_hooks() {
 		then
 			mustbeinstalled=1
 		else
-			local linkedto=$( readlink -f "$dst" )
+			local linkedto=$( readlink -f "$dst" 2>/dev/null )
+
+			# OSX compatibility ...
+			if [ "$linkedto" = "" ]
+			then
+				linkedto=$( python -c "import os; print(os.path.realpath('$dst'))" )
+			fi
+
 			if [ "$linkedto" != "$hook" ]
 			then
 				mustbeinstalled=1
