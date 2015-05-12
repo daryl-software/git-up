@@ -162,6 +162,44 @@ check_connection() {
 
 up_to_date() {
 	git fetch --quiet --tags origin
+
+	local needupdate=0
+	local lastucvar="up.last-update-check"
+	local needupdatevar="up.need-update"
+	local tmpscript="/tmp/git-$lastucvar"
+	local lastuc=$( git config --get $lastucvar || true )
+
+	if [ -n "$lastuc" ]
+	then
+		if [ "$(( $( date +%s ) - $lastuc ))" -gt 3600 ]
+		then
+			needupdate=1
+		fi
+	else
+		needupdate=1
+	fi
+
+	if [ $needupdate -gt 0 ]
+	then
+		git config --global $lastucvar $( date +%s )
+		if curl -o "$tmpscript" -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/git-up
+		then
+			if ! diff -q "$0" "$tmpscript" >/dev/null
+			then
+				git config --global $needupdatevar yes
+			else
+				git config --global $needupdatevar no
+			fi
+		else
+			warn "github.com seems down..."
+		fi
+	fi
+
+	if [ "$( git config $needupdatevar )" = "yes" ]
+	then
+		msgy ">>> Please update git-up: 'git up self-update'"
+	fi
+	#git config --global --unset $lastucvar 
 }
 
 
