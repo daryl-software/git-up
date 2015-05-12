@@ -37,6 +37,7 @@ remotes="prod production origin"
 public_remotes=( github.com bitbucket.org )
 sshopts="-x -A"
 git_config_up_host="up.host"
+needupdatevar="up.need-update"
 remoteuri=
 remote=
 sshhost=
@@ -167,7 +168,6 @@ up_to_date() {
 
 	local needupdate=0
 	local lastucvar="up.last-update-check"
-	local needupdatevar="up.need-update"
 	local tmpscript="/tmp/git-$lastucvar"
 	local lastuc=$( git config --get $lastucvar || true )
 
@@ -442,6 +442,8 @@ do
 			if ! curl -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir	"$install_dir" $setupopts
 			then
 				error "Self-update FAILED!"
+			else
+				git config --global $needupdatevar no
 			fi
 			exit 0
 			;;
