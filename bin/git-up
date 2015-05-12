@@ -141,6 +141,8 @@ get_remote() {
 			if is_not_a_public_git_hoster $shost
 			then
 				sshhost="$shost"
+			else
+				upopts="--remote $remoteuri $upopts"
 			fi
 
 			reponame=${remoteuri##*:}

@@ -16,6 +16,7 @@ orgconfdir="../../git-up-config"
 debug=0
 sync_to=
 config_loaded=0
+remote=
 
 
 # GIT INFOS
@@ -229,7 +230,12 @@ setup_provision() {
 	if [ ! -d "$provisiondir/$repo" ]
 	then
 		msgy "Clone $repo, please wait ..."
-		if ! git clone -l -q $repositories/${repo}.git/ $provisiondir/$repo >&2
+		if [ -d "$repositories/${repo}.git/" ]
+		then
+			remote="$repositories/${repo}.git/"
+		fi
+
+		if ! git clone -l -q $remote $provisiondir/$repo >&2
 		then
 			echo "# FATAL: unable to clone $repo."
 			exit 5
@@ -744,6 +750,11 @@ do
 		--guess)
 			shift
 			do_guess $@
+			;;
+		--remote)
+			shift
+			remote="$1"
+			debug "Set remote = $1"
 			;;
 		--*)
 			warn "Parameter unknown: $1"
