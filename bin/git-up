@@ -134,7 +134,7 @@ check_connection() {
 
 
 up_to_date() {
-	git fetch --quiet origin
+	git fetch --quiet --tags origin
 }
 
 
