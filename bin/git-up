@@ -34,7 +34,9 @@ shopt -s xpg_echo
 #
 # Search git-up on those remotes :
 remotes="prod production origin"
+public_remotes=( github.com bitbucket.org )
 sshopts="-x -A"
+git_config_up_host="up.host"
 remoteuri=
 remote=
 sshhost=
@@ -108,14 +110,39 @@ check_prerequisites() {
 }
 
 
+is_not_a_public_git_hoster() {
+	local rh="$1"
+	for rt in ${public_remotes[@]}
+	do
+		if grep -qF "$rt" <<< "$rh"
+		then
+			return 1
+		fi
+	done
+	return 0
+}
+
+
+get_remote_from_config() {
+	sshhost="$( git config --get $git_config_up_host || true )"
+}
+
+
 get_remote() {
+	get_remote_from_config
 	for search in $remotes
 	do
 		if git remote show -n | grep -q "^$search$"
 		then
 			remote="$search"
 			remoteuri=$( git remote show -n "$search" | grep "Fetch URL" | awk '{print $3}' )
-			sshhost=${remoteuri%%:*}
+
+			local shost=${remoteuri%%:*}
+			if is_not_a_public_git_hoster $shost
+			then
+				sshhost="$shost"
+			fi
+
 			reponame=${remoteuri##*:}
 			reponame=${reponame##*/}
 			reponame=${reponame%%.git}
@@ -416,6 +443,13 @@ fi
 check_prerequisites
 
 get_remote
+
+if [ -z "$sshhost" ]
+then
+	warn "You have to configure git-up deploy server:"
+	msgy "$ git config --global $git_config_up_host YOUR_SSH_HOST.TLD"
+	exit 8
+fi
 
 #check_connection
 

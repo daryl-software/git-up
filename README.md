@@ -129,6 +129,16 @@ or if you want to install it to another folder:
 It will setup `git up` alias, and download scripts to your `~/.git-up` folder.
 
 
+#### Configuration
+
+`git up` will try to guess configuration, but sometimes you have to configure it.
+
+If your deploy server is not your main git remote, like github.com, you can configure it this way:
+```
+$ git config --global up.host your_host.local
+```
+
+
 ### Server side
 
 We use [Ansible](http://www.ansible.com/) and you just have to add a role to your playbooks:
