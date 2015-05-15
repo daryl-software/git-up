@@ -577,7 +577,7 @@ do_sync() {
 	local mutualized=$( get_stage_var mutualized )
 
 	# Not Friday
-	if [ $allowfriday -eq 0 ] && [ "$( date +%u )" = "5" ] && [ "$( date +%H )" -gt 6 ] && ! is_super_user
+	if [ $allowfriday -eq 0 ] && [ "$( date +%u )" = "5" ] && [ "$( date +%H )" -gt 6 ] && ! is_super_user && [ "$stage" = "prod" ]
 	then
 		echo "\033[41m\033[1m" >&2
 		cat <<EOF >&2
