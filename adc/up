@@ -672,7 +672,9 @@ EOF
 --source-dir=$gitdir
 --rsync-module=$rsync_module
 --rsync-user=$user
---master=$master"
+--master=$master
+--before=$before
+--after=$after"
 
 	if [ $debug -gt 0 ]
 	then

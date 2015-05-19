@@ -68,6 +68,8 @@ my @progresschars = qw(| / - \\);
 my $deploymode = 0;
 my $mutu = 0;
 my $minrev = 0;
+my $before_cid = 'unknown_before';
+my $after_cid = '';
 # ssh
 local (*SSHIN, *SSHOUT, *SSHERR); # Tunnel's standard IN/OUT/ERR 
 my $sshio;
@@ -562,7 +564,7 @@ sub hook
 	if (-x $hook)
 	{
 		loginfo3 "Execute $hooktype-deploy hook ...";
-		if (system($hook, $stage, $repo))
+		if (system($hook, $stage, $repo, $before_cid, $after_cid))
 		{
 			logfatal("Hook '$hooktype' FAILED: exitcode=$? ($!)");
 		}
@@ -680,7 +682,6 @@ sub sshrun
 #
 # Main {{{
 #
-my @ARGV_copy = @ARGV;
 GetOptions (
 	"dry-run" => \$opt_dryrun,
 	"help" => \&Usage,
@@ -693,7 +694,9 @@ GetOptions (
 	"rsync-module=s" => \$rsync_module,
 	"rsync-user=s" => \$rsync_user,
 	"master=s" => \$master,
-	"servers=s" => \$servers
+	"servers=s" => \$servers,
+	"before=s" => \$before_cid,
+	"after=s" => \$after_cid
 );
 
 Usage unless (defined($repo) && defined($stage));
@@ -846,6 +849,8 @@ else
 		push @args, "--rsync-module=$rsync_module";
 		push @args, "--rsync-user=$rsync_user";
 		push @args, "--servers=$servers";
+		push @args, "--before=$before_cid";
+		push @args, "--after=$after_cid";
 		push @args, "--debug" if ($debug);
 		push @args, "--mutu" if ($mutu);
 
