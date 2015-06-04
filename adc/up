@@ -229,13 +229,16 @@ setup_provision() {
 	local cloned=0
 	if [ ! -d "$provisiondir/$repo" ]
 	then
-		msgy "Clone $repo, please wait ..."
+		local cloneopts=
 		if [ -d "$repositories/${repo}.git/" ]
 		then
 			remote="$repositories/${repo}.git/"
+			cloneopts="-l -q"
 		fi
+		msgy "Clone $repo from $remote, please wait ..."
+		msgy "git clone $cloneopts $remote $provisiondir/$repo"
 
-		if ! git clone -l -q $remote $provisiondir/$repo >&2
+		if ! git clone $cloneopts $remote $provisiondir/$repo >&2
 		then
 			echo "# FATAL: unable to clone $repo."
 			exit 5
