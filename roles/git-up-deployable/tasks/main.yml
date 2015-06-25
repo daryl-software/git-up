@@ -1,6 +1,7 @@
 - name: USER | deploy group
   group: name={{ item.user }} system=yes
   with_items: deploy_conf
+  tags: deploy-user
 
 - name: USER | deploy user
   user: name={{ item.user }} uid={{ item.uid }} group={{ item.group }} home={{ item.home }}
@@ -12,14 +13,17 @@
   register: deploy_user_out
   # 8 = user already exists
   failed_when: deploy_user_out.rc is defined and deploy_user_out.rc not in (0, 8)
+  tags: deploy-user
 
 - name: USER | fix permission
   file: path={{ item.home }} owner={{ item.user }} group={{ item.group }} recurse=no
   with_items: deploy_conf
+  tags: deploy-user
 
 - name: USER | authorized_key
   authorized_key: user={{ item.user }} key="{{ deploy_ssh_pub }}"
   with_items: deploy_conf
+  tags: deploy-user
 
 - name: DEST | check deploy folder
   file: path={{ item.folder }} state=directory owner={{ item.user }} group={{ item.group }} recurse=no
