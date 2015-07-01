@@ -97,11 +97,11 @@ get_conf() {
 				then
 					local cnf_secured=
 					debug "Parse #$n $cnf"
-					if grep -Ev '^#|^$|^[^ ]*=[^;]*' "$cnf" >&2
+					if grep -Ev '^#|^$|^declare|^[^ ]*=[^;]*' "$cnf" >&2
 					then
 						cnf_secured="/tmp/$( basename $cnf ).secured"
-						warn "Config file '$cnf' is unclead, cleaning it ..."
-						grep -E '^#|^[^ ]*=[^;&]*'  "$cnf" >$cnf_secured
+						warn "Config file '$cnf' is unclean, cleaning it ..."
+						grep -E '^#|^declare|^[^ ]*=[^;&]*'  "$cnf" >$cnf_secured
 						cnf="$cnf_secured"
 					fi
 
@@ -558,6 +558,41 @@ get_stage_var() {
 	echo $val
 }
 
+
+notify_deploy() {
+	local repo=$1
+	local stage=$2
+	local user=$3
+	local master=$4
+	local before=$5
+	local after=$6
+	local sto=$7
+	local nr_app_name="$stage"
+	local nr_desc="[$stage] $repo to $sto ($after)\n$( git log -1 --pretty=medium $after )"
+
+	local varname="newrelic_appname_$repo"
+	if [ -n "${!varname}" ]
+	then
+		nr_app_name="${!varname}-$stage"
+	fi
+
+	if [ -n "$newrelic_api_key" ]
+	then
+		if type curl >/dev/null
+		then
+			msg "Notify NewRelic ..."
+			curl -sS -H "x-api-key:$newrelic_api_key" -XPOST \
+				-d "deployment[app_name]=$nr_app_name" \
+				-d "deployment[description]=$nr_desc" \
+				-d "deployment[revision]=$after" \
+				-d "deployment[user]=$user" \
+				https://api.newrelic.com/deployments.xml >/dev/null
+		else
+			warn "(please install curl for notification)"
+		fi
+	fi
+}
+
 do_sync() {
 	setup_provision
 	wait_for_lock
@@ -701,6 +736,7 @@ EOF
 	debug "$sync_cmd"
 	if $sync_cmd
 	then
+		notify_deploy "$repo" "$stage" $( get_user ) $master $before $after $sync_to
 		hook "post_deploy" $before $after $( get_user )
 		echo "\033[40m\033[1;34m" >&2
 		cat <<EOF
