@@ -695,7 +695,7 @@ EOF
 	fi
 
 	hook "pre_deploy" $before $after $( get_user )
-	local_hook "pre-deploy"
+	local_hook "pre-deploy" $before $after $( get_user )
 
 	if [ -z "$master" ]
 	then
