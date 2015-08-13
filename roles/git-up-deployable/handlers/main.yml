@@ -3,5 +3,5 @@
   # bug with state=restarted => use started + reloaded
   with_items:
   - started
-  - reloaded
+  - restarted
 
