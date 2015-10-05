@@ -42,6 +42,7 @@ remoteuri=
 remote=
 sshhost=
 reponame=
+repolongname=
 LANG=C
 stage=
 debug=0 # --debug
@@ -147,6 +148,7 @@ get_remote() {
 			fi
 
 			reponame=${remoteuri##*:}
+			repolongname="$reponame"
 			reponame=${reponame##*/}
 			reponame=${reponame%%.git}
 			return
@@ -275,7 +277,7 @@ get_next_tag() {
 fetch_info() {
 	msg ">>> Connect to remote $sshhost ..."
 	local infofile="/tmp/${USER}.git-up-info.$$"
-	if ssh $sshopts $sshhost up $upopts "$reponame" $stage --init "$commitish" infos >$infofile
+	if ssh $sshopts $sshhost up $upopts "$repolongname" $stage --init "$commitish" infos >$infofile
 	then
 		. $infofile
 		if [ $debug -gt 0 ]
@@ -347,7 +349,7 @@ check_pushed() {
 }
 
 resync() {
-	ssh $sshopts $sshhost up $upopts "$reponame" $stage sync "$commitish"
+	ssh $sshopts $sshhost up $upopts "$repolongname" $stage sync "$commitish"
 }
 
 
@@ -504,6 +506,7 @@ then
 	msgy "-------------------"
 	echo stage=$stage
 	echo repo=$reponame
+	echo repolong=$repolongname
 	echo remoteuri=$remoteuri
 	echo remote=$remote
 	echo branch_name=$branch_name
@@ -556,7 +559,7 @@ else
 		echo "\033[0m"
 		echo -n $blockcolor
 		echo -n "|                                                                    |\r"
-		echo -n "| Project: $reponame | Stage: $stage | $cpretty => $newtag "
+		echo -n "| Project: $repolongname | Stage: $stage | $cpretty => $newtag "
 		echo "\033[0m"
 		echo -n $blockcolor
 		echo -n "|--------------------------------------------------------------------|"

@@ -101,7 +101,7 @@ git diff-index --check --cached $against -- || true
 # call local pre-commit hook
 if [ -x .hooks/pre-commit ]
 then
-	exec .hooks/pre-commit
+	exec .hooks/pre-commit $against
 fi
 exit 0
 

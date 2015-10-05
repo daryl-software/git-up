@@ -269,10 +269,10 @@ get_current_state() {
 	chead="$( git rev-parse HEAD )"
 	set +e
 	# On which branch am I ?
-	cbranch=$( git branch -r --contains $chead | head -1 | sed "s/^[[:space:]]\+//" | awk '{print $3}' | cut -d/ -f2 )
+	cbranch=$( git branch -r --contains $chead | head -1 | sed "s/^[[:space:]]\+//" | awk '{print $3}' | cut -d/ -f2- )
 	if [ -z "$cbranch" ]
 	then
-		cbranch=$( git branch -r --contains $chead | head -1 | sed "s/^[[:space:]]\+//" | awk '{print $1}' | cut -d/ -f2 )
+		cbranch=$( git branch -r --contains $chead | head -1 | sed "s/^[[:space:]]\+//" | awk '{print $1}' | cut -d/ -f2- )
 	fi
 	debug "cbranch=$cbranch"
 	if [ -n "$cbranch" ]
@@ -645,7 +645,7 @@ EOF
 		#do
 		#	inventory[$i]="$( echo "${inventory[$i]}" | sed "s/REPOSITORY/$repo/; s/STAGE/$stage/;" )"
 		#done
-		inventory="$( echo "$inventory" | sed "s/REPOSITORY/$repo/; s/STAGE/$stage/;" )"
+		inventory="$( echo "$inventory" | sed "s#REPOSITORY#$repo#; s#STAGE#$stage#;" )"
 		local inventory_script=$( echo "$inventory" | cut -d" " -f1 )
 
 		if [ -x "$inventory_script" ]
