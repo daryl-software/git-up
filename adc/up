@@ -261,7 +261,7 @@ setup_provision() {
 provision() {
 	debug "git fetch"
 	git fetch --tags $( test $debug -eq 0 && echo -q ) origin
-	git fetch $( test $debug -eq 0 && echo -q ) origin
+	git fetch $( test $debug -eq 0 && echo -q ) origin --refmap="+refs/pull/*/head:refs/remotes/origin/pr/*"
 	debug "git fetch done."
 }
 
