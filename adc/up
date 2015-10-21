@@ -260,9 +260,9 @@ setup_provision() {
 
 provision() {
 	debug "git fetch"
-	git fetch $( test $debug -eq 0 && echo -q ) origin --tags                                      # fetch tags
-	git fetch $( test $debug -eq 0 && echo -q ) origin                                             # fetch branches
-	git fetch $( test $debug -eq 0 && echo -q ) origin "refs/pull/*/head:refs/remotes/origin/pr/*" # fetch Pull-Requests
+	git fetch    $( test $debug -eq 0 && echo -q ) origin --tags                                      # fetch tags
+	git fetch    $( test $debug -eq 0 && echo -q ) origin                                             # fetch branches
+	git fetch -f $( test $debug -eq 0 && echo -q ) origin "refs/pull/*/head:refs/remotes/origin/pr/*" # fetch Pull-Requests
 	debug "git fetch done."
 }
 
