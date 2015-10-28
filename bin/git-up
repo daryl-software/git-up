@@ -149,6 +149,7 @@ get_remote() {
 
 			reponame=${remoteuri##*:}
 			repolongname="$reponame"
+			#repolongname=${repolongname%%.git}
 			reponame=${reponame##*/}
 			reponame=${reponame%%.git}
 			return
@@ -277,7 +278,7 @@ get_next_tag() {
 fetch_info() {
 	msg ">>> Connect to remote $sshhost ..."
 	local infofile="/tmp/${USER}.git-up-info.$$"
-	if ssh $sshopts $sshhost up $upopts "$repolongname" $stage --init "$commitish" infos >$infofile
+	if ssh $sshopts $sshhost up $upopts "$reponame" $stage --init "$commitish" infos >$infofile
 	then
 		. $infofile
 		if [ $debug -gt 0 ]
@@ -349,7 +350,7 @@ check_pushed() {
 }
 
 resync() {
-	ssh $sshopts $sshhost up $upopts "$repolongname" $stage sync "$commitish"
+	ssh $sshopts $sshhost up $upopts "$reponame" $stage sync "$commitish"
 }
 
 
