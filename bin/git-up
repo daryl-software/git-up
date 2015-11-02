@@ -379,7 +379,7 @@ gitdiff() {
 		git whatchanged --stat --format="%Cred author : %an --- %Cgreen date :  %ad" $@ $d2..$d1
 	elif [ $diff -eq 3 ]
 	then
-		git log --pretty=format:'%Cred%h%Creset -%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' $@ $d2..$d1
+		git log --pretty=format:'%Cred%h%Creset -%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' $@ $d2..$d1 || true
 	fi
 }
 
