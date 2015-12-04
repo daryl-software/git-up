@@ -385,7 +385,7 @@ sub rsyncto # {{{
 		}
 	
 		# compression only over internet, and not between slaves
-		$rsync_opts .= ' --compress --compress-level=9';
+		$rsync_opts .= ' --compress --compress-level=9 --old-compress';
 		$cmd = "$rsync $rsync_opts $srcdir rsync://localhost:$rsync_tun_port/$rsync_dest/";
 	}
 
