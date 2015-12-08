@@ -114,6 +114,7 @@ check_prerequisites() {
 
 is_not_a_public_git_hoster() {
 	local rh="$1"
+	rh=${rh##*@}
 	for rt in ${public_remotes[@]}
 	do
 		if grep -qF "$rt" <<< "$rh"
@@ -278,7 +279,7 @@ get_next_tag() {
 fetch_info() {
 	msg ">>> Connect to remote $sshhost ..."
 	local infofile="/tmp/${USER}.git-up-info.$$"
-	if ssh $sshopts $sshhost up $upopts "$reponame" $stage --init "$commitish" infos >$infofile
+	if ssh $sshopts $sshhost up $upopts "$repolongname" $stage --init "$commitish" infos >$infofile
 	then
 		. $infofile
 		if [ $debug -gt 0 ]
@@ -310,7 +311,7 @@ fetch_info() {
 
 	echo -n $blockcolor
 	echo -n "|                                                                    |\r"
-	echo -n "| $reponame <$stage> is on "
+	echo -n "| $repolongname <$stage> is on "
 	if [ ${#cpretty} -gt 12 ]
 	then
 		echo "\033[0m"
@@ -350,7 +351,7 @@ check_pushed() {
 }
 
 resync() {
-	ssh $sshopts $sshhost up $upopts "$reponame" $stage sync "$commitish"
+	ssh $sshopts $sshhost up $upopts "$repolongname" $stage sync "$commitish"
 }
 
 
