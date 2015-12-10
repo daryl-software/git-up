@@ -372,6 +372,11 @@ sub rsyncto # {{{
 	my $rsync_dest = $rsync_module;
 
 	$rsync_dest .= stage_folder($repo, $stage, $mutu);
+
+	if (-e $srcdir.'.rsync_excludes')
+	{
+		$rsync_opts .= " --exclude-from=$srcdir.rsync_excludes ";
+	}
 	
 	if ($deploymode)
 	{
@@ -379,11 +384,6 @@ sub rsyncto # {{{
 	}
 	else
 	{
-		if (-e $srcdir.'.rsync_excludes')
-		{
-			$rsync_opts .= " --exclude-from=$srcdir.rsync_excludes ";
-		}
-	
 		# compression only over internet, and not between slaves
 		$rsync_opts .= ' --compress --compress-level=9 --old-compress';
 		$cmd = "$rsync $rsync_opts $srcdir rsync://localhost:$rsync_tun_port/$rsync_dest/";
