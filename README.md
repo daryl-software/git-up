@@ -175,6 +175,7 @@ Include git-up-deployable this way :
     }
 ```
 
+Then, you'll need a role to assemble /etc/rsync.d configuration files to /etc/rsyncd.conf
 
 #### Prerequisites
 

@@ -2,6 +2,6 @@
   service: name=rsync state={{ item }}
   # bug with state=restarted => use started + reloaded
   with_items:
+  - stopped
   - started
-  - restarted
 
