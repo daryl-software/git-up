@@ -454,7 +454,17 @@ sub rsyncto # {{{
 		# Fetch stats
 		elsif (/Number of files transferred: (\d+)/)
 		{
-			$stat_files_transferred = $1
+			$stat_files_transferred = $1;
+		}
+		# Rsync 3.1
+		elsif (/Number of deleted files: (\d+)/)
+		{
+			$stat_files_deleted = $1;
+		}
+
+		elsif (/Number of regular files transferred files: (\d+)/)
+		{
+			$stat_files_transferred = $1;
 		}
 		# Total file size: 21.96M bytes
 		# Total transferred file size: 0 bytes
