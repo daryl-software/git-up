@@ -337,16 +337,15 @@ fetch_info() {
 
 check_pushed() {
 	local ref=$( git rev-parse $commitish )
-	if git cherry 2>/dev/null | grep -q "$ref$"
+	local plural=
+	if [ "$1" = "strict" ] || git cherry 2>/dev/null | grep -q "$ref$"
 	then
 		commits=$( git cherry | wc -l )
-		m="You have to push your commits ! ($commits commit"
 		if [ $commits -gt 1 ]
 		then
-			m="${m}s"
+			plural="s"
 		fi
-		m="$m waits to be pushed)"
-		error "$m"
+		error "You have to push your commit$plural ! ($commits commit$plural waiting to be pushed)"
 	fi
 }
 
@@ -544,6 +543,8 @@ else
 	gitdiff 3 $commitish $gitopts # whatchanged
 	if [ $tag -gt 0 -a $commitset -eq 0 ]
 	then
+		check_pushed strict
+
 		if [ $commitset -gt 0 ] && grep -qE "$tag_pattern" <<< $commitish
 		then
 			newtag=$commitish
