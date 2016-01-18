@@ -338,9 +338,15 @@ fetch_info() {
 check_pushed() {
 	local ref=$( git rev-parse $commitish )
 	local plural=
+	local commits=$( git cherry | wc -l )
+
+	if [ $commits -eq 0 ]
+	then
+		return 0
+	fi
+
 	if [ "$1" = "strict" ] || git cherry 2>/dev/null | grep -q "$ref$"
 	then
-		commits=$( git cherry | wc -l )
 		if [ $commits -gt 1 ]
 		then
 			plural="s"
