@@ -429,21 +429,22 @@ is_repo_allowed() {
 
 # Can't use cfg_parser, it's not a real INI file ...
 parse_ansible_hostfile() {
-	local lansible=$ansible
 	local hostfile="$1"
-	if [ -z "$lansible" ]
-	then
-		lansible="ansible" # took from $PATH
-	else
-		# quick hack...
-		if [ -z "$PYTHONPATH" ]
-		then
-			export PYTHONPATH="$( dirname $lansible )/../lib"
-			debug "PYTHONPATH=$PYTHONPATH"
-		fi
-	fi
-	debug "Call ansible: $lansible"
-	local hosts=$( $lansible --inventory "$hostfile" --list-hosts $repo | awk '{print $1}' )
+	#local lansible=$ansible
+	#if [ -z "$lansible" ]
+	#then
+	#	lansible="ansible" # took from $PATH
+	#else
+	#	# quick hack...
+	#	if [ -z "$PYTHONPATH" ]
+	#	then
+	#		export PYTHONPATH="$( dirname $lansible )/../lib"
+	#		debug "PYTHONPATH=$PYTHONPATH"
+	#	fi
+	#fi
+	#debug "Call ansible: $lansible"
+	#local hosts=$( $lansible --inventory "$hostfile" --list-hosts $repo | awk '{print $1}' )
+	local hosts=$( awk '/\['$repo'\]/ { f=1; next; } /\[/ {f=0; next;} /./ && f {print $1}' < "$hostfile" )
 	
 	debug "Hosts found: $hosts"
 	# master is first if not already setup
