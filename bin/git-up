@@ -140,17 +140,20 @@ get_remote() {
 			remote="$search"
 			remoteuri=$( git remote show -n "$search" | grep "Fetch URL" | awk '{print $3}' )
 
-			local shost=${remoteuri%%:*}
-			if is_not_a_public_git_hoster $shost
-			then
-				sshhost="$shost"
-			else
-				upopts="--remote $remoteuri $upopts"
-			fi
+			local shost=${remoteuri%:*}
+			#if is_not_a_public_git_hoster $shost
+			#then
+			#	true
+			#	#sshhost="$shost"
+			#else
+			#fi
+			upopts="--remote $remoteuri $upopts"
 
 			reponame=${remoteuri##*:}
 			repolongname="$reponame"
 			#repolongname=${repolongname%%.git}
+			# remove port:
+			repolongname=${repolongname#[0-9]*/}
 			reponame=${reponame##*/}
 			reponame=${reponame%%.git}
 			return
