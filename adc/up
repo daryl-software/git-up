@@ -230,7 +230,7 @@ setup_provision() {
 	if [ ! -d "$provisiondir/$repo" ]
 	then
 		local cloneopts=
-		if [ -d "$repositories/${repo}.git/" ]
+		if [ -z "$remote" ] && [ -d "$repositories/${repo}.git/" ]
 		then
 			remote="$repositories/${repo}.git/"
 			cloneopts="-l -q"
