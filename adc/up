@@ -805,7 +805,7 @@ do
 		*)
 			if [ -z "$repo" ]
 			then
-				repo="$1"
+				repo="${1%%.git}"
 			elif [ -z "$stage" ]
 			then
 				stage="$1"
