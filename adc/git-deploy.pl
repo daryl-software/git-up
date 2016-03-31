@@ -56,6 +56,7 @@ my $repo;
 my $sourcedir;
 my $rsync_module;
 my $rsync_user;
+my $rsync_dir;
 my $rsync_remote_path;
 my $master;
 my $servers;
@@ -326,10 +327,18 @@ sub stage_folder
 {
 	my $repo = shift || undef;
 	my $stage = shift || undef;
-	my $mutu = shift;
+	my $mutu = shift || 0;
+	my $dest = shift || undef;
 	my $folder = "";
 	$folder .= "/$stage" if (defined($stage));
-	$folder .= "/$repo" if (defined($repo) && $mutu);
+	if (defined($dest))
+	{
+		$folder .= "/$dest";
+	}
+	elsif (defined($repo) && $mutu)
+	{
+		$folder .= "/$repo" if (defined($repo) && $mutu);
+	}
 	return $folder;
 }
 
@@ -371,7 +380,7 @@ sub rsyncto # {{{
 	my $cmd;
 	my $rsync_dest = $rsync_module;
 
-	$rsync_dest .= stage_folder($repo, $stage, $mutu);
+	$rsync_dest .= stage_folder($repo, $stage, $mutu, $rsync_dir);
 
 	if (-e $srcdir.'.rsync_excludes')
 	{
@@ -699,6 +708,7 @@ GetOptions (
 	"source-dir=s" => \$sourcedir,
 	"rsync-module=s" => \$rsync_module,
 	"rsync-user=s" => \$rsync_user,
+	"rsync-dir=s" => \$rsync_dir,
 	"master=s" => \$master,
 	"servers=s" => \$servers,
 	"before=s" => \$before_cid,
@@ -852,9 +862,10 @@ else
 		push @args, "--deploy";
 		push @args, "--repo=$repo";
 		push @args, "--stage=$stage";
-		push @args, "--source-dir=".get_remote_path().stage_folder($repo, $stage, $mutu);
+		push @args, "--source-dir=".get_remote_path().stage_folder($repo, $stage, $mutu, $rsync_dir);
 		push @args, "--rsync-module=$rsync_module";
 		push @args, "--rsync-user=$rsync_user";
+		push @args, "--rsync-dir=$rsync_dir" if defined($rsync_dir);
 		push @args, "--servers=$servers";
 		push @args, "--before=$before_cid";
 		push @args, "--after=$after_cid";

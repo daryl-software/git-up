@@ -216,7 +216,13 @@ setup_provision() {
 	else
 		provisiondir="../../provisioning/$stage"
 	fi
-	gitdir="$provisiondir/$repo"
+
+	if [ -n "$destination_dir" ]
+	then
+		gitdir="$provisiondir/$destination_dir"
+	else
+		gitdir="$provisiondir/$repo"
+	fi
 
 	check_repo
 
@@ -227,7 +233,7 @@ setup_provision() {
 	fi
 
 	local cloned=0
-	if [ ! -d "$provisiondir/$repo" ]
+	if [ ! -d "$gitdir" ]
 	then
 		local cloneopts=
 		if [ -z "$remote" ] && [ -d "$repositories/${repo}.git/" ]
@@ -235,10 +241,11 @@ setup_provision() {
 			remote="$repositories/${repo}.git/"
 			cloneopts="-l -q"
 		fi
+		msgy "DEBUG: clone dest = '$destination_dir'"
 		msgy "Clone $repo from $remote, please wait ..."
-		msgy "git clone $cloneopts $remote $provisiondir/$repo"
+		msgy "git clone $cloneopts $remote $gitdir"
 
-		if ! git clone $cloneopts $remote $provisiondir/$repo >&2
+		if ! git clone $cloneopts $remote $gitdir >&2
 		then
 			echo "# FATAL: unable to clone $repo."
 			exit 5
@@ -712,6 +719,7 @@ EOF
 --source-dir=$gitdir
 --rsync-module=$rsync_module
 --rsync-user=$user
+--rsync-dir=$destination_dir
 --master=$master
 --before=$before
 --after=$after"
