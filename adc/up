@@ -402,7 +402,7 @@ check_repo() {
 			rm -rf "$gitdir"
 		fi
 	else
-		error "Repository <$repo> is not allowed."
+		warn "Deployment of repository <$repo> is disabled."
 	fi
 	exit 8
 }
