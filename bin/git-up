@@ -22,7 +22,7 @@
 #    self-update             : self-update :)
 #    update-hooks            : only update local hooks
 #
-# https://github.com/ezweb/git-up
+# https://github.com/mathroc/git-up
 
 
 set -e
@@ -192,7 +192,7 @@ up_to_date() {
 	if [ $needupdate -gt 0 ]
 	then
 		git config --global $lastucvar $( date +%s )
-		if curl -o "$tmpscript" -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/git-up
+		if curl -o "$tmpscript" -sSL https://raw.githubusercontent.com/mathroc/git-up/master/bin/git-up
 		then
 			if ! diff -q "$0" "$tmpscript" >/dev/null
 			then
@@ -462,7 +462,7 @@ do
 			fi
 
 			echo "Self-update in $install_dir ..."
-			if ! curl -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir	"$install_dir" $setupopts
+			if ! curl -sSL https://raw.githubusercontent.com/mathroc/git-up/master/bin/setup | sh -s -- --install-dir	"$install_dir" $setupopts
 			then
 				error "Self-update FAILED!"
 			else
