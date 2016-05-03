@@ -356,7 +356,7 @@ check_pushed() {
 }
 
 resync() {
-    echo deploying "$commitish" on "$repolongname":$stage
+	echo deploying "$commitish" on "$repolongname":$stage
 	set +e
 	echo "$deploymsg" | ssh $sshopts $sshhost up $upopts "$repolongname" $stage sync "$commitish"
 	# sometimes ssh exists with return code 1 without any errors, even when
