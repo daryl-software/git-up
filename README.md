@@ -120,14 +120,9 @@ Installation
 
 ### User side: install deployment tools
 
-`curl -sSL https://raw.githubusercontent.com/mathroc/git-up/master/bin/setup | sh -s -- --no-alias`
+`curl -sSL https://raw.githubusercontent.com/mathroc/git-up/master/bin/setup | sh -s --no-alias --install-dir ~/bin`
 
-or if you want to install it to another folder:
-
-`curl -sSL https://raw.githubusercontent.com/mathroc/git-up/master/bin/setup | sh -s -- no-alias --install-dir ~/.git-up`
-
-It will setup `git up` alias, and download scripts to your `~/.git-up` folder.
-
+note: make sure ~/bin is in your `$PATH`
 
 #### Configuration
 
