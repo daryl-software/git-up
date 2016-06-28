@@ -209,7 +209,7 @@ sub Usage # {{{
 
 sub sshcmd
 {
-	my $ssh = "/usr/bin/ssh -C -o StrictHostKeyChecking=no -t #tunnel# ";
+	my $ssh = "/usr/bin/ssh -AC -o StrictHostKeyChecking=no -t #tunnel# ";
 
 	my ($host, $port) = split/:/, $master;
 

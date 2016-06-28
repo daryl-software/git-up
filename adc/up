@@ -609,6 +609,8 @@ do_sync() {
 
 	debug "Prepare to deploy ..."
 
+    local ssh_agent_debug_log=/tmp/git-up.ssh_agent_debug.log
+
 	if [ ! -d "$gitdir" ]
 	then
 		error "WTF ? gitdir not found [$gitdir]"
@@ -622,6 +624,7 @@ do_sync() {
 	local master=$( get_stage_var master )
 	local servers=$( get_stage_var servers )
 	local mutualized=$( get_stage_var mutualized )
+	local use_ssh_agent=$( get_stage_var use_ssh_agent )
 
 	# Not Friday
 	if [ $allowfriday -eq 0 ] && [ "$( date +%u )" = "5" ] && [ "$( date +%H )" -gt 6 ] && ! is_super_user && [ "$stage" = "prod" ]
@@ -743,6 +746,12 @@ EOF
 --servers=$servers"
 	fi
 
+    if [ $use_ssh_agent -gt 0 ]
+    then
+        eval $( ssh-agent ) >>$ssh_agent_debug_log
+        ssh-add 2>>$ssh_agent_debug_log
+    fi
+
 	debug "$sync_cmd"
 	if $sync_cmd
 	then
@@ -764,6 +773,11 @@ EOF
 		error "FAILED     凸( ͡° ͜ʖ ͡°)凸"
 		exit 3
 	fi
+
+    if [ $use_ssh_agent -gt 0 ]
+    then
+        eval $( ssh-agent -k ) >>$ssh_agent_debug_log
+    fi
 }
 
 # 
