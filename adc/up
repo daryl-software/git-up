@@ -267,7 +267,7 @@ setup_provision() {
 
 provision() {
 	debug "git fetch"
-	git remote prune origin
+	git remote prune origin >/dev/null
 	git fetch    $( test $debug -eq 0 && echo -q ) origin --tags                                      # fetch tags
 	git fetch    $( test $debug -eq 0 && echo -q ) origin                                             # fetch branches
 	git fetch -f $( test $debug -eq 0 && echo -q ) origin "refs/pull/*/head:refs/remotes/origin/pr/*" # fetch Pull-Requests
@@ -824,7 +824,7 @@ do
 			debug "Set remote = $1"
 			;;
 		--*)
-			warn "Parameter unknown: $1"
+			warn "Unknown parameter: $1"
 			;;
 		*)
 			if [ -z "$repo" ]
@@ -841,7 +841,6 @@ do
 	esac
 	shift
 done
-exit 0
 
 # TODO: 
 # - check that sync_to is in the future

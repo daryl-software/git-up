@@ -359,7 +359,20 @@ check_pushed() {
 }
 
 resync() {
+    set +e
 	ssh $sshopts $sshhost up $upopts "$repolongname" $stage sync "$commitish"
+    # sometimes ssh exists with return code 1 without any errors, even when
+    # "up ... sync" command exits with 0.
+    # ugly hack, but in case of an error with "up" command, it doesn't return 1 
+    # but a bigger number.
+    local retsshcode=$?
+    set -e
+    if [ $retsshcode -eq 1 ]
+    then
+        return 0
+    else
+        return $retsshcode
+    fi
 }
 
 
