@@ -779,6 +779,7 @@ EOF
     then
         eval $( ssh-agent -k ) >>$ssh_agent_debug_log
     fi
+    return 0
 }
 
 # 
