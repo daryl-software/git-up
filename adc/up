@@ -841,6 +841,7 @@ do
 	esac
 	shift
 done
+exit 0
 
 # TODO: 
 # - check that sync_to is in the future
