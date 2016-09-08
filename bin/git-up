@@ -385,9 +385,9 @@ gitdiff() {
 		d1="$1"
 		shift
 	fi
-	local d2="$cpretty"
+	local d2="$chead"
 
-	if [ "$d1" = "$d2" ]
+	if [ "$d1" = "$cpretty" ]
 	then
 		return
 	fi
