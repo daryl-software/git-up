@@ -5,6 +5,7 @@ set -e
 shopt -s xpg_echo
 cd $( dirname $0 )
 
+GITUPVERSION=2
 postreceivehook="../../.gitolite/hooks/common/post-receive"
 repositories=
 provisiondir=
@@ -29,7 +30,7 @@ NOREV="0000000000000000000000000000000000000000"
 
 
 error () {
-    echo "\033[41m\033[1;33mCRITICAL: $@\033[0m" >&2
+	echo "\033[41m\033[1;33mCRITICAL: $@\033[0m" >&2
 }
 
 warn () {
@@ -45,7 +46,7 @@ msg () {
 }
 
 msgy () { 
-    echo "\033[40m\033[1;33m$@\033[0m" >&2
+	echo "\033[40m\033[1;33m$@\033[0m" >&2
 }
 
 debug() {
@@ -363,8 +364,11 @@ do_infos() {
 	else
 		echo "tag=0"
 	fi
+	echo "allow_auto_deploy_message=$allow_auto_deploy_message"
+	echo "deploy_message_prompt=\"$deploy_message_prompt\""
 	echo "branch_name='$branch_name'"
 	echo "branch_stage='$branch_stage'"
+	echo "tag_stage='$tag_stage'"
 	local color="color_$stage"
 	echo -E "color='${!color}'"
 
@@ -577,8 +581,9 @@ notify_deploy() {
 	local before=$5
 	local after=$6
 	local sto=$7
+	local deploymsg="$8"
 	local nr_app_name="$stage"
-	local nr_desc="[$stage] $repo to $sto ($after)\n$( git log -1 --pretty=medium $after )"
+	local nr_desc="[$stage] $repo to $sto ($after)\n$deploymsg\n$( git log -1 --pretty=medium $after )"
 
 	local varname="newrelic_appname_$repo"
 	if [ -n "${!varname}" ]
@@ -601,6 +606,10 @@ notify_deploy() {
 			warn "(please install curl for notification)"
 		fi
 	fi
+	local notify_msg_file=$( mktemp /tmp/notify_msg_file.XXXXX )
+	echo "$deploymsg" > $notify_msg_file
+	hook "notify_deploy" $before $after $( get_user ) $notify_msg_file
+	rm $notify_msg_file
 }
 
 do_sync() {
@@ -610,7 +619,13 @@ do_sync() {
 
 	debug "Prepare to deploy ..."
 
-    local ssh_agent_debug_log=/tmp/git-up.ssh_agent_debug.log
+	local deploymsg=
+	if [ -n "$GITUPVERSION" ] && [ $GITUPVERSION -gt 1 ]
+	then
+		deploymsg="$(</dev/stdin)"
+	fi
+
+	local ssh_agent_debug_log=/tmp/git-up.ssh_agent_debug.log
 
 	if [ ! -d "$gitdir" ]
 	then
@@ -685,6 +700,7 @@ EOF
 
 	# OK, then checkout repository to what we want
 	provision
+	debug "Deploymsg: ##$deploymsg##"
 	debug "Checkout to $sync_to"
 	git checkout $( test $debug -eq 0 && echo -q ) -f $sync_to
 
@@ -747,16 +763,16 @@ EOF
 --servers=$servers"
 	fi
 
-    if [ $use_ssh_agent -gt 0 ]
-    then
-        eval $( ssh-agent ) >>$ssh_agent_debug_log
-        ssh-add 2>>$ssh_agent_debug_log
-    fi
+	if [ $use_ssh_agent -gt 0 ]
+	then
+		eval $( ssh-agent ) >>$ssh_agent_debug_log
+		ssh-add 2>>$ssh_agent_debug_log
+	fi
 
 	debug "$sync_cmd"
 	if $sync_cmd
 	then
-		notify_deploy "$repo" "$stage" $( get_user ) $master $before $after $sync_to
+		notify_deploy "$repo" "$stage" $( get_user ) $master $before $after $sync_to "$deploymsg"
 		hook "post_deploy" $before $after $( get_user )
 		echo "\033[40m\033[1;34m" >&2
 		cat <<EOF
@@ -775,11 +791,11 @@ EOF
 		exit 3
 	fi
 
-    if [ $use_ssh_agent -gt 0 ]
-    then
-        eval $( ssh-agent -k ) >>$ssh_agent_debug_log
-    fi
-    return 0
+	if [ $use_ssh_agent -gt 0 ]
+	then
+		eval $( ssh-agent -k ) >>$ssh_agent_debug_log
+	fi
+	return 0
 }
 
 # 
