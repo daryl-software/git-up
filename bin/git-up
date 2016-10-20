@@ -43,7 +43,7 @@ remote=
 sshhost=
 reponame=
 repolongname=
-LANG=en_US.UTF-8
+#LANG=en_US.UTF-8
 stage=
 debug=0 # --debug
 check=0
@@ -139,7 +139,7 @@ get_remote() {
 		if git remote show -n | grep -q "^$search$"
 		then
 			remote="$search"
-			remoteuri=$( git remote show -n "$search" | grep "Fetch URL" | awk '{print $3}' )
+			remoteuri=$( LANG=C git remote show -n "$search" | grep "Fetch URL" | awk '{print $3}' )
 
 			local shost=${remoteuri%:*}
 			#if is_not_a_public_git_hoster $shost
