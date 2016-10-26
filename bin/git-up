@@ -625,6 +625,9 @@ else
 					deploymsgvalid=1
 				fi
 			done
+			echo -n $blockcolor
+			echo -n "Message OK."
+			echo "\033[0m"
 		fi
 		resync
 	fi
