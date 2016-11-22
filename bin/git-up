@@ -205,10 +205,6 @@ up_to_date() {
 		fi
 	fi
 
-	if [ "$( git config $needupdatevar )" = "yes" ]
-	then
-		msgy ">>> Please update git-up: 'git up self-update'"
-	fi
 	#git config --global --unset $lastucvar 
 }
 
@@ -630,6 +626,11 @@ else
 			echo "\033[0m"
 		fi
 		resync
+	fi
+	if [ "$( git config $needupdatevar )" = "yes" ]
+	then
+		msgy "Updating git-up ..."
+		exec git up self-update
 	fi
 	exit 0
 fi
