@@ -269,9 +269,10 @@ setup_provision() {
 provision() {
 	debug "git fetch"
 	git remote prune origin >/dev/null
-	git fetch    $( test $debug -eq 0 && echo -q ) origin --tags                                      # fetch tags
-	git fetch    $( test $debug -eq 0 && echo -q ) origin                                             # fetch branches
-	git fetch -f $( test $debug -eq 0 && echo -q ) origin "refs/pull/*/head:refs/remotes/origin/pr/*" # fetch Pull-Requests
+	git fetch    $( test $debug -eq 0 && echo -q ) origin --tags                                         # fetch tags
+	git fetch    $( test $debug -eq 0 && echo -q ) origin                                                # fetch branches
+	git fetch -f $( test $debug -eq 0 && echo -q ) origin "refs/pull/*/head:refs/remotes/pr/*"           # fetch GitHub Pull-Requests
+	git fetch -f $( test $debug -eq 0 && echo -q ) origin "refs/merge-requests/*/head:refs/remotes/mr/*" # fetch GitLab Merge-Requests
 	debug "git fetch done."
 }
 
