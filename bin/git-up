@@ -447,6 +447,10 @@ do
 		--info)
 			infosonly=1
 			;;
+		--message|-m)
+			deploymsg=$2
+			shift
+			;;
 		self-update)
 			install_dir="$( dirname $0 )"
 			if [ -z "$install_dir" ] || [ ! -d "$install_dir" ]
@@ -550,13 +554,18 @@ fi
 if [ -n "$allow_auto_deploy_message" ] && [ $allow_auto_deploy_message -eq 0 ] && [ "$stage" = "$tag_stage" ]
 then
 	blockcolor="\033[44m\033[1;37m"
-	echo -n $blockcolor
-	echo ">--------------------------------------------------------------------<"
-	#echo "\033[0m"
-	echo -n -e "$deploy_message_prompt"
-	echo "\033[0m"
 
 	deploymsgvalid=0
+	if [ -n "$deploymsg" ]
+	then
+		deploymsgvalid=1
+	else
+		echo -n $blockcolor
+		echo ">--------------------------------------------------------------------<"
+		#echo "\033[0m"
+		echo -n -e "$deploy_message_prompt"
+		echo "\033[0m"
+	fi
 	while [ $deploymsgvalid -eq 0 ]
 	do
 		echo -n "Message: "
@@ -569,11 +578,11 @@ then
 		if [ -n "$deploymsg" ]
 		then
 			deploymsgvalid=1
+			echo -n $blockcolor
+			echo -n "Message OK."
+			echo "\033[0m"
 		fi
 	done
-	echo -n $blockcolor
-	echo -n "Message OK."
-	echo "\033[0m"
 fi
 
 resync
