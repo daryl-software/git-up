@@ -771,7 +771,7 @@ EOF
 	fi
 
 	debug "$sync_cmd"
-	if $sync_cmd
+	if $sync_cmd 2>&1
 	then
 		notify_deploy "$repo" "$stage" $( get_user ) $master $before $after $sync_to "$deploymsg"
 		hook "post_deploy" $before $after $( get_user )
