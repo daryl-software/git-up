@@ -720,7 +720,7 @@ EOF
 	then
 		echo
 		msg "DIFF between <$before> and <$after>"
-		git whatchanged --stat --format="%n%Cred author : %an --- %Cgreen date :  %ad%n %h - %s %Creset" $before..$after
+		git whatchanged --stat --format="%n%Cred author : %an --- %Cgreen date :  %ad%n %h - %s %Creset" $after..$before
 		echo
 	fi
 
