@@ -640,12 +640,6 @@ EOF
 		echo "\033[0m" >&2
 		exit 42
 	fi
-	
-	local deploymsg=
-	if [ -n "$GITUPVERSION" ] && [ $GITUPVERSION -gt 1 ]
-	then
-		deploymsg="$(</dev/stdin)"
-	fi
 
 	local ssh_agent_debug_log=/tmp/git-up.ssh_agent_debug.log
 
@@ -701,7 +695,6 @@ EOF
 
 	# OK, then checkout repository to what we want
 	provision
-	debug "Deploymsg: ##$deploymsg##"
 	debug "Checkout to $sync_to"
 	git checkout $( test $debug -eq 0 && echo -q ) -f $sync_to
 
@@ -724,6 +717,13 @@ EOF
 		git whatchanged --stat --format="%n%Cred author : %an --- %Cgreen date :  %ad%n %h - %s %Creset" $after..$before
 		echo
 	fi
+	
+	local deploymsg=
+	if [ -n "$GITUPVERSION" ] && [ $GITUPVERSION -gt 1 ]
+	then
+		deploymsg="$(</dev/stdin)"
+	fi
+	debug "Deploymsg: ##$deploymsg##"
 
 	hook "pre_deploy" $before $after $( get_user )
 	local_hook "pre-deploy" $before $after $( get_user )
