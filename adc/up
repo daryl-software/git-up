@@ -620,6 +620,27 @@ do_sync() {
 
 	debug "Prepare to deploy ..."
 
+	# Not Friday
+	if [ $allowfriday -eq 0 ] && [ "$( date +%u )" = "5" ] && [ "$( date +%H )" -gt 6 ] && ! is_super_user && [ "$stage" = "prod" ]
+	then
+		echo "\033[41m\033[1m" >&2
+		cat <<EOF >&2
+┐┌┐┌┐
+┘└┘└┘ ╲ο̷ފ
+┐┌┐┌┐ ／ 
+┘└┘└┘ノ)
+┐┌┐┌┐ 
+┘└┘└┘
+┐┌┐┌┐ Sorry, it's friday   凸( ͡° ͜ʖ ͡°)凸
+┘└┘└┘
+┐┌┐┌┐ 
+│││││
+┴┴┴┴┴ 
+EOF
+		echo "\033[0m" >&2
+		exit 42
+	fi
+	
 	local deploymsg=
 	if [ -n "$GITUPVERSION" ] && [ $GITUPVERSION -gt 1 ]
 	then
@@ -643,27 +664,6 @@ do_sync() {
 	local mutualized=$( get_stage_var mutualized )
 	local use_ssh_agent=$( get_stage_var use_ssh_agent )
 
-	# Not Friday
-	if [ $allowfriday -eq 0 ] && [ "$( date +%u )" = "5" ] && [ "$( date +%H )" -gt 6 ] && ! is_super_user && [ "$stage" = "prod" ]
-	then
-		echo "\033[41m\033[1m" >&2
-		cat <<EOF >&2
-┐┌┐┌┐
-┘└┘└┘ ╲ο̷ފ
-┐┌┐┌┐ ／ 
-┘└┘└┘ノ)
-┐┌┐┌┐ 
-┘└┘└┘
-┐┌┐┌┐ Sorry, it's friday   凸( ͡° ͜ʖ ͡°)凸
-┘└┘└┘
-┐┌┐┌┐ 
-│││││
-┴┴┴┴┴ 
-EOF
-		echo "\033[0m" >&2
-		exit 42
-	fi
-	
 	# use inventory script if available
 	local oldmaster="$master"
 	if [ -n "$inventory" ]
