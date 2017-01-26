@@ -734,6 +734,11 @@ EOF
 		exit 16
 	fi
 
+    if [ -z "$rsync_dir" ]
+    then
+        rsync_dir=$destination_dir
+    fi
+
 	msg ">>> Delivering $repo to $stage on $sync_to ..."
 	local sync_cmd="./git-deploy.pl
 --repo=$repo
@@ -741,7 +746,7 @@ EOF
 --source-dir=$gitdir
 --rsync-module=$rsync_module
 --rsync-user=$user
---rsync-dir=$destination_dir
+--rsync-dir=$rsync_dir
 --master=$master
 --before=$before
 --after=$after"
