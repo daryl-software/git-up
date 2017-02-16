@@ -33,7 +33,7 @@ shopt -s xpg_echo
 # CONFIG
 #
 # Search git-up on those remotes :
-remotes=$(git config --get up.remotes || echo "prod production origin")
+remotes=$(git config --get up.remotes || echo "prod production upstream origin")
 public_remotes=( github.com bitbucket.org )
 sshopts="-x -A"
 git_config_up_host="up.host"
