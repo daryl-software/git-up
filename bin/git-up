@@ -22,7 +22,7 @@
 #    self-update             : self-update :)
 #    update-hooks            : only update local hooks
 #
-# https://github.com/ezweb/git-up
+# https://github.com/mathroc/git-up
 
 
 set -e
@@ -192,7 +192,7 @@ up_to_date() {
 	if [ $needupdate -gt 0 ]
 	then
 		git config --global $lastucvar $( date +%s )
-		if curl -o "$tmpscript" -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/git-up
+		if curl -o "$tmpscript" -sSL https://raw.githubusercontent.com/mathroc/git-up/master/bin/git-up
 		then
 			if ! diff -q "$0" "$tmpscript" >/dev/null
 			then
@@ -205,7 +205,7 @@ up_to_date() {
 		fi
 	fi
 
-	#git config --global --unset $lastucvar 
+	#git config --global --unset $lastucvar
 }
 
 
@@ -356,11 +356,12 @@ check_pushed() {
 }
 
 resync() {
+	echo deploying "$commitish" on "$repolongname":$stage
 	set +e
 	echo "$deploymsg" | ssh $sshopts $sshhost up $upopts "$repolongname" $stage sync "$commitish"
 	# sometimes ssh exists with return code 1 without any errors, even when
 	# "up ... sync" command exits with 0.
-	# ugly hack, but in case of an error with "up" command, it doesn't return 1 
+	# ugly hack, but in case of an error with "up" command, it doesn't return 1
 	# but a bigger number.
 	local retsshcode=$?
 	set -e
@@ -446,6 +447,10 @@ do
 		--info)
 			infosonly=1
 			;;
+		--message|-m)
+			deploymsg=$2
+			shift
+			;;
 		self-update)
 			install_dir="$( dirname $0 )"
 			if [ -z "$install_dir" ] || [ ! -d "$install_dir" ]
@@ -461,7 +466,7 @@ do
 			fi
 
 			echo "Self-update in $install_dir ..."
-			if ! curl -sSL https://raw.githubusercontent.com/ezweb/git-up/master/bin/setup | sh -s -- --install-dir	"$install_dir" $setupopts
+			if ! curl -sSL https://raw.githubusercontent.com/mathroc/git-up/master/bin/setup | sh -s -- --install-dir	"$install_dir" $setupopts
 			then
 				error "Self-update FAILED!"
 			else
@@ -517,7 +522,7 @@ fi
 
 #check_connection
 
-up_to_date
+#up_to_date
 
 fetch_info
 
@@ -545,94 +550,39 @@ then
 	exit 0
 fi
 
-# DIFF / WHATCHANGED
-if [ $diff -gt 0 ]
+
+if [ -n "$allow_auto_deploy_message" ] && [ $allow_auto_deploy_message -eq 0 ] && [ "$stage" = "$tag_stage" ]
 then
-	gitdiff $diff
-elif [ $resync -gt 0 ]
-then
-	resync
+	blockcolor="\033[44m\033[1;37m"
 
-# DEPLOY
-else
-	install_hooks
-
-	check_pushed
-
-	gitdiff 3 $commitish $gitopts # whatchanged
-	if [ $tag -gt 0 -a $commitset -eq 0 ]
+	deploymsgvalid=0
+	if [ -n "$deploymsg" ]
 	then
-		check_pushed strict
-
-		if [ $commitset -gt 0 ] && grep -qE "$tag_pattern" <<< $commitish
-		then
-			newtag=$commitish
-		else
-			get_next_tag
-			if [ -z "$newtag" ]
-			then
-				echo "An unexpected error occurred while computing next tag."
-				exit 2
-			fi
-		fi
-		blockcolor="\033[44m\033[1;37m"
-		echo -n $blockcolor
-		echo -n "|--------------------------------------------------------------------|"
-		echo "\033[0m"
-		echo -n $blockcolor
-		echo -n "|                                                                    |\r"
-		echo -n "| Project: $repolongname | Stage: $stage | $cpretty => $newtag "
-		echo "\033[0m"
-		echo -n $blockcolor
-		echo -n "|--------------------------------------------------------------------|"
-		echo "\033[0m"
-		printf "Please validate this $( test $release -gt 0 && echo release || echo hotfix ) [yYnN] : "
-		read proceed
-		if [ "$proceed" = "y" ] || [ "$proceed" = "Y" ] # || [ "$proceed" = "" ]
-		then
-			# should trigger deploy :
-			git tag $newtag && git push $remote $newtag
-		else
-			echo "CANCELED."
-			exit 7
-		fi
+		deploymsgvalid=1
 	else
-		if [ -n "$allow_auto_deploy_message" ] && [ $allow_auto_deploy_message -eq 0 ] && [ "$stage" = "$tag_stage" ] 
+		echo -n $blockcolor
+		echo ">--------------------------------------------------------------------<"
+		#echo "\033[0m"
+		echo -n -e "$deploy_message_prompt"
+		echo "\033[0m"
+	fi
+	while [ $deploymsgvalid -eq 0 ]
+	do
+		echo -n "Message: "
+		deploymsg=
+		while read line
+		do
+			[ -z "$line" ] && break
+			deploymsg="$deploymsg$line\n"
+		done
+		if [ -n "$deploymsg" ]
 		then
-			blockcolor="\033[44m\033[1;37m"
-			echo -n $blockcolor
-			echo ">--------------------------------------------------------------------<"
-			#echo "\033[0m"
-			echo -n -e "$deploy_message_prompt"
-			echo "\033[0m"
-
-			deploymsgvalid=0
-			while [ $deploymsgvalid -eq 0 ]
-			do
-				echo -n "Message: "
-				deploymsg=
-				while read line
-				do
-					[ -z "$line" ] && break
-					deploymsg="$deploymsg$line\n"
-				done
-				if [ -n "$deploymsg" ]
-				then
-					deploymsgvalid=1
-				fi
-			done
+			deploymsgvalid=1
 			echo -n $blockcolor
 			echo -n "Message OK."
 			echo "\033[0m"
 		fi
-		resync
-	fi
-	if [ "$( git config $needupdatevar )" = "yes" ]
-	then
-		msgy "Updating git-up ..."
-		exec git up self-update
-	fi
-	exit 0
+	done
 fi
 
-
+resync
