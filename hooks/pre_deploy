@@ -44,7 +44,7 @@ then
 		echo -e "\033[45m\033[1;36m>= COMPOSER INSTALL <=\033[0m"
 		composer=$( which composer )
 
-		if grep -qF '"php" : "7' composer.json
+		if grep -qE '"php" ?: ?"\^?7' composer.json
 		then
 			composer="/usr/bin/php7.1 -d memory_limit=1G /usr/local/bin/composer.phar"
 		fi

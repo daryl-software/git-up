@@ -18,6 +18,7 @@ debug=0
 sync_to=
 config_loaded=0
 remote=
+deployuser=
 
 
 # GIT INFOS
@@ -510,7 +511,10 @@ wait_for_lock() {
 
 
 get_user() {
-	if is_gitolite
+    if [ -n "$deployuser" ]
+    then
+        echo "$deployuser"
+	elif is_gitolite
 	then
 		echo $GL_USER
 	elif is_gitlab
@@ -845,6 +849,11 @@ do
 			shift
 			remote="$1"
 			debug "Set remote = $1"
+			;;
+		--user)
+			shift
+			deployuser="$1"
+			debug "Set deployuser = $1"
 			;;
 		--*)
 			warn "Unknown parameter: $1"
