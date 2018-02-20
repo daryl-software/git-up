@@ -46,7 +46,10 @@ then
 
 		if grep -qE '"php" ?: ?"\^?7' composer.json
 		then
-			composer="/usr/bin/php7.1 -d memory_limit=1G /usr/local/bin/composer.phar"
+			for phpversion in /usr/bin/php7*
+			do
+				composer="$phpversion -d memory_limit=1G /usr/local/bin/composer.phar"
+			done
 		fi
 
 		if $composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install
