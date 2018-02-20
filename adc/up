@@ -66,7 +66,7 @@ is_gitolite() {
 }
 
 is_gitlab() {
-	getent passwd | grep -q gitlab
+	getent passwd gitlab
 	return $?
 }
 
@@ -84,7 +84,7 @@ get_conf() {
 		then
 			warn "You should add your organization and projects specific config files in $orgconfdir."
 		else
-			debug "Update internal git-up config repository ($orgconfdir)"
+			debug "Update internal git-up config repository ($PWD/$orgconfdir)"
 			# can't use --work-tree parameter as we are in a git repository ... 
 			# so I use a subshell
 			( unset GIT_DIR; cd $orgconfdir && git pull $( test $debug -eq 0 && echo -q ) --ff-only origin master )  >&2
@@ -812,6 +812,21 @@ EOF
 # 
 # MAIN
 #
+if [ -n "$SSH_ORIGINAL_COMMAND" ]
+then
+	ssh_orig_cmd_first_arg_removed=0
+	for arg in $SSH_ORIGINAL_COMMAND
+	do
+		if [ "$arg" == "up" ] && [ "$ssh_orig_cmd_first_arg_removed" -eq 0 ]
+		then
+			# skip first "up" from the command
+			ssh_orig_cmd_first_arg_removed=1
+		else
+			set -- "$@" "$arg"
+		fi
+	done
+fi
+
 while [ $# -gt 0 ]
 do
 	case "$1" in
