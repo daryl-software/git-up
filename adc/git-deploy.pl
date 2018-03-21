@@ -755,7 +755,7 @@ if ($deploymode)
 
 	for (my $i=0; $i<scalar(@hosts); $i++)
 	{
-		$hosts[$i] =~ /(.+?)\./;
+		$hosts[$i] =~ /(.+?)\.?/;
 		# Remove myself
 		if (hostname =~ /^$1\.?/)
 		{
