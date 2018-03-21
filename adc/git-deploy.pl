@@ -337,7 +337,7 @@ sub stage_folder
 	}
 	elsif (defined($repo) && $mutu)
 	{
-		$folder .= "/$repo" if (defined($repo) && $mutu);
+		$folder .= "/$repo";
 	}
 	return $folder;
 }

@@ -817,20 +817,20 @@ EOF
 # 
 # MAIN
 #
-if [ -n "$SSH_ORIGINAL_COMMAND" ]
-then
-	ssh_orig_cmd_first_arg_removed=0
-	for arg in $SSH_ORIGINAL_COMMAND
-	do
-		if [ "$arg" == "up" ] && [ "$ssh_orig_cmd_first_arg_removed" -eq 0 ]
-		then
-			# skip first "up" from the command
-			ssh_orig_cmd_first_arg_removed=1
-		else
-			set -- "$@" "$arg"
-		fi
-	done
-fi
+#if [ -n "$SSH_ORIGINAL_COMMAND" ]
+#then
+#	ssh_orig_cmd_first_arg_removed=0
+#	for arg in $SSH_ORIGINAL_COMMAND
+#	do
+#		if [ "$arg" == "up" ] && [ "$ssh_orig_cmd_first_arg_removed" -eq 0 ]
+#		then
+#			# skip first "up" from the command
+#			ssh_orig_cmd_first_arg_removed=1
+#		else
+#			set -- "$@" "$arg"
+#		fi
+#	done
+#fi
 
 while [ $# -gt 0 ]
 do
