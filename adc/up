@@ -777,7 +777,12 @@ EOF
 	if [ $use_ssh_agent -gt 0 ]
 	then
 		eval $( ssh-agent ) >>$ssh_agent_debug_log
-		ssh-add 2>>$ssh_agent_debug_log
+        if [ -n "$ssh_key" ]
+        then
+    		ssh-add ~/.ssh/$ssh_key 2>>$ssh_agent_debug_log
+        else
+    		ssh-add 2>>$ssh_agent_debug_log
+        fi
 	fi
 
 	debug "$sync_cmd"
