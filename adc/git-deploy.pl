@@ -238,6 +238,41 @@ sub sshtun # {{{ Start the SSH tunnel
 {
 	my $logprefix = shift || "";
 	my $sshpid = 0;
+
+
+	# Check that nothing is using the port needed by tunnel.
+	my $tmp_rsync_tun_port = $rsync_tun_port;
+	my $max_ports = 2;
+	my $pid_port = 0;
+	while ($tmp_rsync_tun_port < $rsync_tun_port + $max_ports) {
+		$pid_port = `/usr/bin/lsof -ti :$tmp_rsync_tun_port`;
+		if ($? > 0)
+		{
+			last;
+		}
+		else
+		{
+			my @pids = split(/\n/, $pid_port);
+			for my $pidp (@pids)
+			{
+				chomp($pidp);
+				$pidp = int($pidp);
+				my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,$blksize,$blocks) = stat("/proc/$pidp");
+				if ((time - $mtime) > 3600)
+				{
+					logwarn("git-up deploy blocked", "Kill pid $pidp");
+					kill 'TERM', $pidp;
+				}
+				logmsg("Port $tmp_rsync_tun_port already used by pid #$pidp, try ".++$tmp_rsync_tun_port);
+			}
+		}
+	}
+	if ($tmp_rsync_tun_port >= $rsync_tun_port + $max_ports)
+	{
+		logfatal("Too many simultaneous deployments, try later.");
+	}
+	$rsync_tun_port = $tmp_rsync_tun_port;
+
 	($ssh, $sshtun) = sshcmd();
 
 	$sshtun =~ s/#tunnel#/-L $rsync_tun_port:localhost:873/;

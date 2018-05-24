@@ -478,7 +478,7 @@ parse_ansible_hostfile() {
 
 
 set_lockfile() {
-	lockfile="/tmp/git_up_deploy.lock"
+    lockfile="/tmp/git_up_deploy_$( echo $repo | tr "/" "_" ).lock"
 }
 
 
@@ -488,8 +488,8 @@ check_lockfile() {
 
 
 wait_for_lock() {
-	debug "check lock"
 	set_lockfile
+	debug "check lock: $lockfile"
 
 	trap cleanup INT QUIT TERM EXIT
 
