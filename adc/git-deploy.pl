@@ -30,7 +30,7 @@ no warnings 'closure';
 
 # {{{ config
 my $rsync = "/usr/bin/rsync";
-my $rsync_opts = "
+my $default_rsync_opts = "
 	-rlptgoD
 	--progress
 	--stats 
@@ -414,12 +414,19 @@ sub rsyncto # {{{
 	# rsync loop
 	my $cmd;
 	my $rsync_dest = $rsync_module;
+	my $rsync_opts = $default_rsync_opts;
 
 	$rsync_dest .= stage_folder($repo, $stage, $mutu, $rsync_dir);
+
+	if ($rsync_dest eq $rsync_module)
+	{
+		$rsync_opts =~ s/delay-updates/inplace/;
+	}
 
 	if (-e $srcdir.'.rsync_excludes')
 	{
 		$rsync_opts .= " --exclude-from=$srcdir.rsync_excludes ";
+		$default_rsync_opts .= " --exclude-from=$srcdir.rsync_excludes ";
 	}
 	
 	if ($deploymode)
@@ -659,7 +666,6 @@ sub get_remote_path
 sub check_myself
 {
 	loginfo3("Check myself ...");
-	my $needupdate = 1;
 
 	get_remote_path();
 
@@ -767,15 +773,15 @@ foreach my $var2check ($stage, $sourcedir, $rsync_module, $rsync_user)
 # debug:
 if ($opt_dryrun)
 {
-	$rsync_opts = "--dry-run $rsync_opts";
+	$default_rsync_opts = "--dry-run $default_rsync_opts";
 }
 #if ($debug)
 #{
-#	$rsync_opts = "--verbose $rsync_opts";
+#	$default_rsync_opts = "--verbose $default_rsync_opts";
 #}
 
 # Flatten rsync opts
-$rsync_opts =~ s/\n\t?/ /g;
+$default_rsync_opts =~ s/\n\t?/ /g;
 
 
 # 
