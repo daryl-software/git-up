@@ -587,30 +587,7 @@ notify_deploy() {
 	local after=$6
 	local sto=$7
 	local deploymsg="$8"
-	local nr_app_name="$stage"
-	local nr_desc="[$stage] $repo to $sto ($after)\n$deploymsg\n$( git log -1 --pretty=medium $after )"
 
-	local varname="newrelic_appname_$repo"
-	if [ -n "${!varname}" ]
-	then
-		nr_app_name="${!varname}-$stage"
-	fi
-
-	if [ -n "$newrelic_api_key" ]
-	then
-		if type curl >/dev/null
-		then
-			msg "Notify NewRelic ..."
-			curl -sS -H "x-api-key:$newrelic_api_key" -XPOST \
-				-d "deployment[app_name]=$nr_app_name" \
-				-d "deployment[description]=$nr_desc" \
-				-d "deployment[revision]=$after" \
-				-d "deployment[user]=$user" \
-				https://api.newrelic.com/deployments.xml >/dev/null
-		else
-			warn "(please install curl for notification)"
-		fi
-	fi
 	local notify_msg_file=$( mktemp /tmp/notify_msg_file.XXXXX )
 	echo "$deploymsg" > $notify_msg_file
 	hook "notify_deploy" $before $after $( get_user ) $notify_msg_file
