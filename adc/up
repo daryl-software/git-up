@@ -815,6 +815,8 @@ do
 		test)
 			exit 0
 			;;
+		up)
+			;;
 		autotag)
 			shift
 			exec ../bin/autotag.pl --nofetch --short $@
