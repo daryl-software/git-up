@@ -29,7 +29,10 @@ then
 	else
 		if [ -n "$before" ] && [ -n "$after" ]
 		then
-			if git diff --name-only $before $after | grep -q ^composer\.lock
+			if [ "$before" = "$after" ]
+			then
+				composer_update=1
+			elif git diff --name-only $before $after | grep -q ^composer\.lock
 			then
 				composer_update=1
 			fi
