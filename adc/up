@@ -145,7 +145,7 @@ hook() {
 			do
 				if [ -x "$hookscript" ]
 				then
-					debug "Call hook: $hookscript"
+					debug "Call hook: $hookscript $stage $repo $gitdir $@"
 					$hookscript $stage $repo $gitdir $@ || exit $?
 				else
 					debug "hook $hookname => '$hookscript' : script not found."
@@ -255,8 +255,8 @@ setup_provision() {
 		cloned=1
 	fi
 
-	export GIT_WORK_TREE="$gitdir"
-	export GIT_DIR="$gitdir/.git"
+	export GIT_WORK_TREE="$PWD/$gitdir"
+	export GIT_DIR="$PWD/$gitdir/.git"
 	debug "work-tree=$GIT_WORK_TREE"
 
 	# init on commitish if cloned
