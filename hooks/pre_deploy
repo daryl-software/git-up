@@ -45,16 +45,18 @@ then
 		unset GIT_WORK_TREE
 		composererror=1
 		echo -e "\033[45m\033[1;36m>= COMPOSER INSTALL <=\033[0m"
-		composer=$( which composer )
+		composerphpoptions="-d memory_limit=2G -d xdebug.remote_enable=0 -d xdebug.profiler_enable=0 -d xdebug.default_enable=0 /usr/bin/composer.phar"
+		composer="/usr/bin/php $composerphpoptions"
 
 		if grep -qE '"php" ?: ?"\^?7' composer.json
 		then
 			for phpversion in /usr/bin/php7*
 			do
-				composer="$phpversion -d memory_limit=1G /usr/local/bin/composer.phar"
+				composer="$phpversion $composerphpoptions"
 			done
 		fi
 
+		export COMPOSER_DISABLE_XDEBUG_WARN=1
 		if $composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install
 		then
 			composererror=0
