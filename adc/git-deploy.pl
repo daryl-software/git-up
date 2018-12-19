@@ -389,6 +389,7 @@ sub rsyncto # {{{
 	chomp($host);
 	my $logprefix = colored(sprintf("%-32s", "[".get_shorthost($host)."]"), 'bold magenta');
 	my $max_try = 2;
+	my $verbose = 0;
 
 	sub put
 	{
@@ -436,7 +437,8 @@ sub rsyncto # {{{
 	else
 	{
 		# compression only over internet, and not between slaves
-		$rsync_opts .= ' --compress --compress-level=9 --old-compress';
+		$rsync_opts .= ' --compress --compress-level=9 --old-compress --info=NAME';
+		$verbose = 1;
 		$cmd = "$rsync $rsync_opts $srcdir rsync://localhost:$rsync_tun_port/$rsync_dest/";
 	}
 
@@ -458,7 +460,7 @@ sub rsyncto # {{{
 	my $daemon_excluded = 0;
 	while (<RSYNC>)
 	{
-		put ($_) if ($debug);
+		put ("DEBUG: ".$_) if ($debug);
 		# don't display all errors
 		if (/^(rsync:? \w+:) ?(.+)/)
 		{
@@ -497,9 +499,10 @@ sub rsyncto # {{{
 			$numfiles = $1;
 		}
 
-		elsif (/\s*deleting\s+/)
+		elsif (/Number of files: [0-9,]+ \(reg: ([0-9,]+), dir: [0-9,]+, link: [0-9,]+\)/)
 		{
-			$stat_files_deleted += 1;
+			$numfiles = $1;
+			$numfiles =~ s/,//g;
 		}
 
 		# Fetch stats
@@ -508,7 +511,7 @@ sub rsyncto # {{{
 			$stat_files_transferred = $2;
 		}
 		# Rsync 3.1
-		elsif (/Number of deleted files: (\d+)/)
+		elsif (/Number of deleted files: \d+ \(reg: (\d+), dir: \d+\)/)
 		{
 			$stat_files_deleted = $1;
 		}
@@ -525,11 +528,17 @@ sub rsyncto # {{{
 			$stat_total_tr_file_size = $1
 		}
 
-		# deleting
+		# updating/deleting a file or directory
 		elsif (/^(deleting )?(\w+?\/.+)/)
 		{
+			my $deleted = 0;
+			if (/\s*deleting\s+/)
+			{
+				$stat_files_deleted += 1;
+				$deleted++;
+			}
 			$n++;
-			my $percent = 0;
+			my $percent = "?";
 			if ($progress_i >= $#progresschars)
 			{
 				$progress_i = 0;
@@ -542,12 +551,28 @@ sub rsyncto # {{{
 			
 			if ($n > 0 and $numfiles > 0)
 			{
-				$percent = $n/$numfiles*100;
+				$percent = sprintf("%.02f", $n/$numfiles*100);
 			}
-			put(sprintf "\r%s%s %d/%d [%d%%]" . " "x40 . "\r", $logprefix, $s, $n, $numfiles, $percent);
+			if ($verbose) {
+				my $file = $_;
+				chomp($file);
+				my $prefix = "UPDATED";
+				if ($deleted) {
+					$prefix = "DELETED";
+					$file =~ s/^deleting //;
+				}
+				put "$prefix $percent% : $file\n" if ($file =~ /[^\/]$/);
+			} else {
+				put(sprintf "\r%s%s %d/%d [%d%%]" . " "x40 . "\r", $logprefix, $s, $n, $numfiles, $percent);
+			}
 		}
 
-		elsif (/xfer#\d+, to-check=/)
+		elsif (/xfe?r#\d+, to-che?c?k=/)
+		{
+			next;
+		}
+
+		elsif (/^(cannot delete non-empty directory|Number|Literal|Matched|File list|Total bytes|sent |total size)|file |xfr#/)
 		{
 			next;
 		}
