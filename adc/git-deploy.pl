@@ -242,7 +242,7 @@ sub sshtun # {{{ Start the SSH tunnel
 
 	# Check that nothing is using the port needed by tunnel.
 	my $tmp_rsync_tun_port = $rsync_tun_port;
-	my $max_ports = 2;
+	my $max_ports = 20;
 	my $pid_port = 0;
 	while ($tmp_rsync_tun_port < $rsync_tun_port + $max_ports) {
 		$pid_port = `/usr/bin/lsof -ti :$tmp_rsync_tun_port`;
