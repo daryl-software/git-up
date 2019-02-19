@@ -66,8 +66,8 @@ The delivery process is quite simple, it only needs tools that are already insta
         |                     +- push -----> | gitolite/gitlab |        |                    +-------------> | server#A  |     |
         |                     |          |   |                 |        |                    |       |       |           |     |
         |                     |          |   +-------+---------+        |                    |       |       +-----------+     |
-		|                     |          |           |                  |                    |       |                         | 
-		|                     |          |       ADC hook               |                    |       |                         | 
+        |                     |          |           |                  |                    |       |                         | 
+        |                     |          |       ADC hook               |                    |       |                         | 
         |                     |          |           |                  |                    | rsync |                         |
         |                     |          |           v                  |                    |       |       +-----------+     |
         |                     |          |   +-------+--------+         |       +------------+----+  |       |           |     |
