@@ -60,6 +60,7 @@ revertto=
 resync=0
 deploymsg=
 GITROOT=
+GITDIR=
 
 #
 # FUNCTIONS
@@ -205,7 +206,7 @@ up_to_date() {
 		fi
 	fi
 
-	#git config --global --unset $lastucvar 
+	#git config --global --unset $lastucvar
 }
 
 
@@ -214,7 +215,7 @@ install_hooks() {
 	do
 		local hk=$( basename $hook )
 		local mustbeinstalled=0
-		local dst="$GITROOT/.git/hooks/$hk"
+		local dst="$GITDIR/hooks/$hk"
 		if [ ! -h "$dst" ]
 		then
 			mustbeinstalled=1
@@ -360,7 +361,7 @@ resync() {
 	echo "$deploymsg" | ssh $sshopts $sshhost up $upopts "$repolongname" $stage sync "$commitish"
 	# sometimes ssh exists with return code 1 without any errors, even when
 	# "up ... sync" command exits with 0.
-	# ugly hack, but in case of an error with "up" command, it doesn't return 1 
+	# ugly hack, but in case of an error with "up" command, it doesn't return 1
 	# but a bigger number.
 	local retsshcode=$?
 	set -e
@@ -404,6 +405,7 @@ gitdiff() {
 
 
 GITROOT=$( git rev-parse --show-toplevel )
+GITDIR=$( git rev-parse --git-dir )
 gitopts=""
 while [ $# -gt 0 ]
 do
