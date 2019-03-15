@@ -726,6 +726,7 @@ EOF
 	# Get deployment vars
 	local inventory=$( get_stage_var inventory )
 	local rsync_module=$( get_stage_var rsync_module )
+	local rsync_pwfile=$( get_stage_var rsync_password )
 	local user=$( get_stage_var user )
 	local master=$( get_stage_var master )
 	local servers=$( get_stage_var servers )
@@ -819,6 +820,7 @@ EOF
 --stage=$stage
 --source-dir=$gitdir
 --rsync-module=$rsync_module
+--rsync-password=$rsync_pwfile
 --rsync-user=$user
 --rsync-dir=$rsync_dir
 --master=$master

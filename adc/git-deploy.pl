@@ -55,6 +55,7 @@ my ($ssh, $sshtun);
 my $repo;
 my $sourcedir;
 my $rsync_module;
+my $rsync_password = "/etc/rsyncd.passwd";
 my $rsync_user;
 my $rsync_dir;
 my $rsync_remote_path;
@@ -423,6 +424,7 @@ sub rsyncto # {{{
 	{
 		$rsync_opts =~ s/delay-updates/inplace/;
 	}
+    $rsync_opts .= " --password-file=$rsync_password";
 
 	if (-e $srcdir.'.rsync_excludes')
 	{
@@ -432,14 +434,14 @@ sub rsyncto # {{{
 	
 	if ($deploymode)
 	{
-		$cmd = "$rsync $rsync_opts $srcdir/ rsync://$host/$rsync_dest/";
+		$cmd = "$rsync $rsync_opts $srcdir/ rsync://gitup\@$host/$rsync_dest/";
 	}
 	else
 	{
 		# compression only over internet, and not between slaves
 		$rsync_opts .= ' --compress --compress-level=9 --old-compress --info=NAME';
 		$verbose = 1;
-		$cmd = "$rsync $rsync_opts $srcdir rsync://localhost:$rsync_tun_port/$rsync_dest/";
+		$cmd = "$rsync $rsync_opts $srcdir rsync://gitup\@localhost:$rsync_tun_port/$rsync_dest/";
 	}
 
 	put "RSYNC $srcdir TO ".$host."::$rsync_dest $/" if ($debug);
@@ -773,6 +775,7 @@ GetOptions (
 	"stage=s" => \$stage,
 	"source-dir=s" => \$sourcedir,
 	"rsync-module=s" => \$rsync_module,
+	"rsync-password=s" => \$rsync_password,
 	"rsync-user=s" => \$rsync_user,
 	"rsync-dir=s" => \$rsync_dir,
 	"master=s" => \$master,
@@ -930,6 +933,7 @@ else
 		push @args, "--stage=$stage";
 		push @args, "--source-dir=".get_remote_path().stage_folder($repo, $stage, $mutu, $rsync_dir);
 		push @args, "--rsync-module=$rsync_module";
+        #push @args, "--rsync-password=$rsync_password";
 		push @args, "--rsync-user=$rsync_user";
 		push @args, "--rsync-dir=$rsync_dir" if defined($rsync_dir);
 		push @args, "--servers=$servers";
