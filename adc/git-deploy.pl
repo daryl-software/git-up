@@ -418,7 +418,7 @@ sub rsyncto # {{{
 	my $rsync_dest = $rsync_module;
 	my $rsync_opts = $default_rsync_opts;
 
-	$rsync_dest .= stage_folder($repo, $stage, $mutu, $rsync_dir);
+	$rsync_dest .= stage_folder($repo, $stage, $mutu, $rsync_dir) if defined ($stage);
 
 	if ($rsync_dest eq $rsync_module)
 	{
