@@ -28,7 +28,7 @@ if type -f bash >/dev/null
 then
 	gotbash=1
 fi
-if type -f python >/dev/null 
+if type -f python3 >/dev/null 
 then
 	gotpython=1
 fi
@@ -78,7 +78,7 @@ do
 	then
 		if [ $gotpython -gt 0 ]
 		then
-			python -m py_compile "$f"
+			python3 -m py_compile "$f"
 		else
 			echo "Warn: syntax check not available for Python"
 		fi
