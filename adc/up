@@ -15,6 +15,7 @@ commitish=
 defaultconfdir=../conf.d
 orgconfdir="../../git-up-config"
 debug=0
+quick=0
 sync_to=
 config_loaded=0
 remote=
@@ -124,7 +125,7 @@ get_conf() {
 
 # Hook from this repository, or config repo
 hook() {
-	if [ -n "$1" ]
+	if [ -n "$1" ] && [ $quick = 0 ]
 	then
 		local hookname="$1"
 		shift
@@ -159,7 +160,7 @@ hook() {
 local_hook() {
 	local hook="$1"
 	shift
-	if [ -n "$hook" ]
+	if [ -n "$hook" ] && [ $quick = 0 ]
 	then
 		if [ -d "$gitdir" ]
 		then
@@ -587,6 +588,7 @@ notify_deploy() {
 	local after=$6
 	local sto=$7
 	local deploymsg="$8"
+    quick=0
 
 	local notify_msg_file=$( mktemp /tmp/notify_msg_file.XXXXX )
 	echo "$deploymsg" > $notify_msg_file
@@ -862,8 +864,13 @@ EOF
 	then
 		notify_deploy "$repo" "$stage" $( get_user ) $master $before $after $sync_to "$deploymsg"
 		hook "post_deploy" $before $after $( get_user )
-		echo "\033[40m\033[1;34m" >&2
+        okfaces=("(͠≖ ͜ʖ͠≖)" "ᕙ(▀̿̿Ĺ̯̿̿▀̿ ̿) ᕗ" "ᕦ( ͡°╭͜ʖ╮͡° )ᕤ" "old")
+        selectedface=${okfaces[$RANDOM % ${#okfaces[@]} ]}
+		echo -n "\033[40m\033[1;34m✔️  Deployed successfully 🥳        "  >&2
+        if [ "$selectedface" = "old" ]
+        then
 		cat <<EOF
+
 ╲╭━━━━╮╲╲
 ╲┃╭╮╭╮┃╲╲
 ┗┫┏━━┓┣┛╲
@@ -871,11 +878,17 @@ EOF
 ╲╰┳━━┳╯╲╲╲╲╲╲╲╲╲
 ╲╲┛╲╲┗╲╲╲╲╲╲╲╲╲
 EOF
+        else
+            echo -n "$selectedface" >&2
+        fi
 		echo "\033[0m" >&2
 		cleanup
 	else
 		cleanup
-		error "FAILED     凸( ͡° ͜ʖ ͡°)凸"
+        # error "FAILED        (╥﹏╥)"
+        errorfaces=("(╥﹏╥)" "凸( ͡° ͜ʖ ͡°)凸" "( ཀ ʖ̯ ཀ)" "´༎ຶ ͜ʖ ༎ຶ \`" "( ͡⚆ ͜ʖ ͡⚆)╭∩╮" "¯\\_(° ͜ʖ °)_/¯" "乁( ⁰͡ Ĺ̯ ⁰͡ ) ㄏ" "( ͡ಠ ʖ̯ ͡ಠ)")
+        selectedface=${errorfaces[$RANDOM % ${#errorfaces[@]} ]}
+		error "😱😱😱 FAILED     $selectedface"
 		exit 3
 	fi
 
@@ -930,6 +943,9 @@ do
 		--debug)
 			debug=1
 			debug "Call $0 $@"
+			;;
+		--quick)
+			quick=1
 			;;
 		--init)
 			shift

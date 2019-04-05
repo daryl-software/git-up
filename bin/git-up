@@ -445,6 +445,9 @@ do
 			debug=1
 			upopts="--debug $upopts"
 			;;
+		--quick)
+			upopts="--quick $upopts"
+			;;
 		--info)
 			infosonly=1
 			;;
