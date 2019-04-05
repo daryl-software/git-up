@@ -864,7 +864,7 @@ EOF
 	then
 		notify_deploy "$repo" "$stage" $( get_user ) $master $before $after $sync_to "$deploymsg"
 		hook "post_deploy" $before $after $( get_user )
-        okfaces=("(͠≖ ͜ʖ͠≖)" "ᕙ(▀̿̿Ĺ̯̿̿▀̿ ̿) ᕗ" "ᕦ( ͡°╭͜ʖ╮͡° )ᕤ" "old")
+        okfaces=("(͠≖ ͜ʖ͠≖)" "ᕙ(▀̿̿Ĺ̯̿̿▀̿ ̿) ᕗ" "ᕦ( ͡°╭͜ʖ╮͡° )ᕤ" )
         selectedface=${okfaces[$RANDOM % ${#okfaces[@]} ]}
 		echo -n "\033[40m\033[1;34m👍 Deployed successfully          "  >&2
         if [ "$selectedface" = "old" ]
