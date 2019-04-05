@@ -54,6 +54,7 @@ infosonly=0
 commitish=
 commitset=0
 newtag=
+quick=0
 hotfix=1
 release=0
 revertto=
@@ -278,7 +279,7 @@ get_next_tag() {
 }
 
 fetch_info() {
-	msg ">>> Connect to remote $sshhost ..."
+	msg "📶 Connect to remote $sshhost ..."
 	local infofile="/tmp/${USER}.git-up-info.$$"
 	if ssh $sshopts $sshhost up $upopts "$repolongname" $stage --init "$commitish" infos >$infofile
 	then
@@ -307,31 +308,31 @@ fetch_info() {
 		blockcolor="$color"
 	fi
 	echo -n $blockcolor
-	echo -n "|--------------------------------------------------------------------|"
+	echo -n "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
 	echo "\033[0m"
 
 	echo -n $blockcolor
-	echo -n "|                                                                    |\r"
-	echo -n "| $repolongname <$stage> is on "
+	echo -n "┃                                                                    ┃\r"
+	echo -n "┃ $repolongname <$stage> is on "
 	if [ ${#cpretty} -gt 12 ]
 	then
 		echo "\033[0m"
 
 		echo -n $blockcolor
-		echo -n "|                                                                    |\r"
-		echo -n "| $cpretty"
+		echo -n "┃                                                                    ┃\r"
+		echo -n "┃ $cpretty"
 	else
 		echo -n "$cpretty"
 	fi
 	echo "\033[0m"
 
 	echo -n $blockcolor
-	echo -n "|                                                                    |\r"
-	echo -n "| >> deploying $commitish <<"
+	echo -n "┃                                                                    ┃\r"
+	echo -n "┃ >> deploying $commitish <<"
 	echo "\033[0m"
 
 	echo -n $blockcolor
-	echo -n "|--------------------------------------------------------------------|"
+	echo -n "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
 	echo "\033[0m"
 }
 
@@ -401,6 +402,10 @@ gitdiff() {
 	then
 		git log --pretty=format:'%Cred%h%Creset -%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' $@ $d2..$d1 || true
 	fi
+    if [ $quick -gt 0 ]
+    then
+        msg "🔥🔥🔥  quick 🚀 mode enabled 🔥🔥🔥"
+    fi
 }
 
 
@@ -446,6 +451,7 @@ do
 			upopts="--debug $upopts"
 			;;
 		--quick)
+            quick=1
 			upopts="--quick $upopts"
 			;;
 		--info)
@@ -582,14 +588,14 @@ else
 		fi
 		blockcolor="\033[44m\033[1;37m"
 		echo -n $blockcolor
-		echo -n "|--------------------------------------------------------------------|"
+	    echo -n "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
 		echo "\033[0m"
 		echo -n $blockcolor
-		echo -n "|                                                                    |\r"
-		echo -n "| Project: $repolongname | Stage: $stage | $cpretty => $newtag "
+		echo -n "┃                                                                    ┃\r"
+		echo -n "┃ Project: $repolongname | Stage: $stage | $cpretty => $newtag "
 		echo "\033[0m"
 		echo -n $blockcolor
-		echo -n "|--------------------------------------------------------------------|"
+        echo -n "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
 		echo "\033[0m"
 		printf "Please validate this $( test $release -gt 0 && echo release || echo hotfix ) [yYnN] : "
 		read proceed
@@ -606,15 +612,16 @@ else
 		then
 			blockcolor="\033[44m\033[1;37m"
 			echo -n $blockcolor
-			echo ">--------------------------------------------------------------------<"
+			echo "╾────────────────────────────────────────────────────────────────────╼"
 			#echo "\033[0m"
-			echo -n -e "$deploy_message_prompt"
+			echo -e "$deploy_message_prompt"
+			echo -n "╾────────────────────────────────────────────────────────────────────╼"
 			echo "\033[0m"
 
 			deploymsgvalid=0
 			while [ $deploymsgvalid -eq 0 ]
 			do
-				echo -n "Message: "
+				echo -n "💬 \033[4m\033[1mMessage:\033[0m "
 				deploymsg=
 				while read line
 				do
@@ -627,7 +634,7 @@ else
 				fi
 			done
 			echo -n $blockcolor
-			echo -n "Message OK."
+			echo -n "Message 🆗"
 			echo "\033[0m"
 		fi
 		resync

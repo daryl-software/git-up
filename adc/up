@@ -816,7 +816,7 @@ EOF
         rsync_dir=$destination_dir
     fi
 
-	msg ">>> Delivering $repo to $stage on $sync_to ..."
+	msg "📦 Delivering $repo to $stage on $sync_to ..."
 	local sync_cmd="./git-deploy.pl
 --repo=$repo
 --stage=$stage
@@ -866,7 +866,7 @@ EOF
 		hook "post_deploy" $before $after $( get_user )
         okfaces=("(͠≖ ͜ʖ͠≖)" "ᕙ(▀̿̿Ĺ̯̿̿▀̿ ̿) ᕗ" "ᕦ( ͡°╭͜ʖ╮͡° )ᕤ" "old")
         selectedface=${okfaces[$RANDOM % ${#okfaces[@]} ]}
-		echo -n "\033[40m\033[1;34m✔️  Deployed successfully 🥳        "  >&2
+		echo -n "\033[40m\033[1;34m👍 Deployed successfully          "  >&2
         if [ "$selectedface" = "old" ]
         then
 		cat <<EOF

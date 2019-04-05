@@ -1010,7 +1010,7 @@ else
 	elsif ($rsyncok)
 	{
 		hook('report');
-		loginfo("Sync Successful.");
+		loginfo("📨 Sync Successful");
 		exit 0;
 	}
 	else
