@@ -388,7 +388,7 @@ sub rsyncto # {{{
 	my $stage = shift || undef;
 	my $try = shift || 0;
 	chomp($host);
-	my $logprefix = colored(sprintf("%-32s", "[".get_shorthost($host)."]"), 'bold magenta');
+	my $logprefix = colored(sprintf("%-35s", "🖴 ".get_shorthost($host)), 'bold magenta');
 	my $max_try = 2;
 	my $verbose = 0;
 
@@ -594,12 +594,12 @@ sub rsyncto # {{{
 	# 23 = "Skipping any contents from this failed directory"
 	if ($r == 0 or ($daemon_excluded and ($r == 5888 or $r == 3072)))
 	{
-		put("Transfered: ".
+		put("│ Transfered: ".
 		($stat_files_transferred > 0 ? colored($stat_files_transferred, 'bold green') : $stat_files_transferred).
-		" / Deleted: ".
+		" │ Deleted: ".
 		($stat_files_deleted > 0 ? colored($stat_files_deleted, 'bold red') : $stat_files_deleted).
-		" / Total: $numfiles | Size: $stat_total_tr_file_size/$stat_total_file_size".
-		($daemon_excluded ? " (some were excluded)" : "").
+		" │ Total: $numfiles │ Size: $stat_total_tr_file_size/$stat_total_file_size".
+		($daemon_excluded ? " (some were excluded) │" : " │").
 		$/);
 		$r = 0;
 	}
@@ -852,7 +852,7 @@ if ($deploymode)
 		# boucle sur les serveurs
 		foreach my $host (@hosts)
 		{
-			my $logprefix = "[".get_shorthost($host)."] ";
+			my $logprefix = "🖴 ".get_shorthost($host)." ";
 			# 
 			# Method thread
 			#
