@@ -270,14 +270,14 @@ sub sshtun # {{{ Start the SSH tunnel
 	}
 	if ($tmp_rsync_tun_port >= $rsync_tun_port + $max_ports)
 	{
-		logfatal("Too many simultaneous deployments, try later.");
+		logfatal("🔞 Too many simultaneous deployments, try later.");
 	}
 	$rsync_tun_port = $tmp_rsync_tun_port;
 
 	($ssh, $sshtun) = sshcmd();
 
 	$sshtun =~ s/#tunnel#/-L $rsync_tun_port:localhost:873/;
-	loginfo2($logprefix."Starting secure tunnel : $rsync_user\@$master...");
+	loginfo2($logprefix."🏁 Starting secure tunnel : $rsync_user\@$master...");
 	#logdebug($logprefix.$sshtun.$/);
 
 	eval
@@ -289,7 +289,7 @@ sub sshtun # {{{ Start the SSH tunnel
 	{
 		if ($@ =~ /^open3/)
 		{
-			logfatal("Unable to start secured tunnel: $!\n$@");
+			logfatal("😓 Unable to start secured tunnel: $!\n$@");
 		}
 		else
 		{
@@ -299,7 +299,7 @@ sub sshtun # {{{ Start the SSH tunnel
 	else
 	{
 		# wait for establishment
-		loginfo2($logprefix."Waiting for connection...");
+		loginfo2($logprefix."⏳ Waiting for connection...");
 		my ($out, $err, $bytes) = sshrun("echo READY", 1, 10);
 
 		if (defined($out))
@@ -320,11 +320,11 @@ sub sshtun # {{{ Start the SSH tunnel
 
 		if (defined($out) && $out eq 'READY')
 		{
-			loginfo2($logprefix."connection ready.");
+			loginfo2($logprefix."🔥 connection ready.");
 		}
 		else
 		{
-			logfatal("Unable to start secured vortex: " . $err);
+			logfatal("😓 Unable to start secured vortex: " . $err);
 			closesshtun();
 		}
 	}
@@ -650,7 +650,7 @@ sub hook
 		loginfo3 "Execute $hooktype-deploy hook ...";
 		if (system($hook, $stage, $repo, $before_cid, $after_cid))
 		{
-			logfatal("Hook '$hooktype' FAILED: exitcode=$? ($!)");
+			logfatal("💢 Hook '$hooktype' FAILED: exitcode=$? ($!)");
 		}
 	}
 
@@ -679,11 +679,11 @@ sub get_remote_path
 	{
 		$out =~ /^\s*path\s*=\s*(.+)$/;
 		$rsync_remote_path = $1;
-		loginfo3("Remote path: $rsync_remote_path");
+		logdebug("Remote path: $rsync_remote_path");
 	}
 	else
 	{
-		logfatal("Unable to found remote path for [$rsync_module] from /etc/rsyncd.conf");
+		logfatal("💢 Unable to found remote path for [$rsync_module] from /etc/rsyncd.conf");
 	}
 	return $rsync_remote_path;
 }
@@ -692,7 +692,7 @@ sub get_remote_path
 # Rsync myself to master
 sub check_myself
 {
-	loginfo3("Check myself ...");
+	loginfo3("🗽 Check myself ...");
 
 	get_remote_path();
 
@@ -700,7 +700,7 @@ sub check_myself
 
 	unless ($rsyncret)
 	{
-		logfatal("Unable to upload myself :(");
+		logfatal("💢 Unable to upload myself :(");
 	}
 }
 
@@ -793,7 +793,7 @@ foreach my $var2check ($stage, $sourcedir, $rsync_module, $rsync_user)
 {
 	unless(defined($var2check) && length($var2check) > 0)
 	{
-		logfatal("Project '$repo' is not yet configured to be deployed.");
+		logfatal("💢 Project '$repo' is not yet configured to be deployed.");
 	}
 }
 
@@ -835,7 +835,7 @@ if ($deploymode)
 
 	if (scalar(@hosts) > 0)
 	{
-		loginfo3 "Deploy to ".scalar(@hosts)." servers ...";
+		loginfo3 "✈️  Deploy to ".scalar(@hosts)." servers ...";
 
 		# declaration du thread
 		my @threads;
@@ -900,13 +900,13 @@ else
 	# if not connected
 	unless ($sshpid)
 	{
-		logfatal("Unable to start SSH vortex");
+		logfatal("💢 Unable to start SSH vortex");
 	}
 
 	get_remote_path();
 	check_myself();
 	
-	loginfo3("Sync to $master...");
+	loginfo3("🛫 Sync to $master...");
 
 	# start sync to master
 	$rsyncok = rsyncto($sourcedir, undef, $master, $repo, $stage);
@@ -1010,12 +1010,12 @@ else
 	elsif ($rsyncok)
 	{
 		hook('report');
-		loginfo("📨 Sync Successful");
+		loginfo("🛬 Sync Successful");
 		exit 0;
 	}
 	else
 	{
-		logfatal("Failed to sync on master.");
+		logfatal("💢 Failed to sync on master.");
 	}
 }
 
