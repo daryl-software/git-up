@@ -388,7 +388,7 @@ sub rsyncto # {{{
 	my $stage = shift || undef;
 	my $try = shift || 0;
 	chomp($host);
-	my $logprefix = colored(sprintf("%-35s", "🖴 ".get_shorthost($host)), 'bold magenta');
+	my $logprefix = colored(sprintf("%-35s", "🤖 ".get_shorthost($host)), 'bold magenta');
 	my $max_try = 2;
 	my $verbose = 0;
 
@@ -852,7 +852,7 @@ if ($deploymode)
 		# boucle sur les serveurs
 		foreach my $host (@hosts)
 		{
-			my $logprefix = "🖴 ".get_shorthost($host)." ";
+			my $logprefix = "🤖 ".get_shorthost($host)." ";
 			# 
 			# Method thread
 			#
