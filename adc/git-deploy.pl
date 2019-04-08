@@ -962,7 +962,7 @@ else
 				elsif ($log !~ /\[(\d+)\%\]/)
 				{
 					$log =~ s/\r//g;
-					print colored(sprintf("%-32s", "[$host]"), 'bold magenta')."$log$/" unless ($log eq "");
+					print colored(sprintf("%-32s", "🤖 $host"), 'bold magenta')."$log$/" unless ($log eq "");
 				}
 			}
 			elsif (/HOSTS=(.+)/)
