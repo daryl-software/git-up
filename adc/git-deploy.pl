@@ -647,7 +647,7 @@ sub hook
 	logdebug ("Run hook $sourcedir/$hook if exists$/");
 	if (-x $hook)
 	{
-		loginfo3 "Execute $hooktype-deploy hook ...";
+		loginfo3 "🗡️ Execute $hooktype-deploy hook ...";
 		if (system($hook, $stage, $repo, $before_cid, $after_cid))
 		{
 			logfatal("💢 Hook '$hooktype' FAILED: exitcode=$? ($!)");
