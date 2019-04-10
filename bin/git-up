@@ -60,6 +60,7 @@ release=0
 revertto=
 resync=0
 deploymsg=
+lastcomment=
 GITROOT=
 GITDIR=
 
@@ -401,11 +402,12 @@ gitdiff() {
 	elif [ $diff -eq 3 ]
 	then
 		git log --pretty=format:'%Cred%h%Creset -%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' $@ $d2..$d1 || true
+        lastcomment=$( git log -2 --pretty=format:'%s' $@ $d2..$d1 || true )
+        if [ -z "$lastcomment" ]
+        then
+            lastcomment=$( git log -1 --pretty=format:'%s' $@ $d1 || true )
+        fi
 	fi
-    if [ $quick -gt 0 ]
-    then
-        msg "🔥🔥🔥  quick 🚀 mode enabled 🔥🔥🔥"
-    fi
 }
 
 
@@ -571,6 +573,10 @@ else
 	check_pushed
 
 	gitdiff 3 $commitish $gitopts # whatchanged
+	if [ $quick -gt 0 ]
+	then
+		msg "🔥🔥🔥  quick 🚀 mode enabled 🔥🔥🔥"
+	fi
 	if [ $tag -gt 0 -a $commitset -eq 0 ]
 	then
 		check_pushed strict
@@ -595,7 +601,7 @@ else
 		echo -n "┃ Project: $repolongname | Stage: $stage | $cpretty => $newtag "
 		echo "\033[0m"
 		echo -n $blockcolor
-        echo -n "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+		echo -n "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
 		echo "\033[0m"
 		printf "Please validate this $( test $release -gt 0 && echo release || echo hotfix ) [yYnN] : "
 		read proceed
@@ -621,13 +627,10 @@ else
 			deploymsgvalid=0
 			while [ $deploymsgvalid -eq 0 ]
 			do
-				echo -n "💬 \033[4m\033[1mMessage:\033[0m "
+				#echo "DEBUG: last comment='$lastcomment'"
+				#echo -n "💬 \033[4m\033[1mMessage:\033[0m "
 				deploymsg=
-				while read line
-				do
-					[ -z "$line" ] && break
-					deploymsg="$deploymsg$line\n"
-				done
+				read -e -p "💬 Message: " -i "$lastcomment" deploymsg
 				if [ -n "$deploymsg" ]
 				then
 					deploymsgvalid=1
