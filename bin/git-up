@@ -358,6 +358,12 @@ check_pushed() {
 	fi
 }
 
+fetch_refs() {
+	git fetch    $( test $debug -eq 0 && echo -q ) origin --tags                                         # fetch tags
+	git fetch    $( test $debug -eq 0 && echo -q ) origin                                                # fetch branches
+	git fetch -f $( test $debug -eq 0 && echo -q ) origin "refs/merge-requests/*/head:refs/remotes/mr/*" # fetch GitLab Merge-Requests
+}
+
 resync() {
 	set +e
 	echo "$deploymsg" | ssh $sshopts $sshhost up $upopts "$repolongname" $stage sync "$commitish"
@@ -573,6 +579,7 @@ else
 	install_hooks
 
 	check_pushed
+	fetch_refs
 
 	gitdiff 3 $commitish $gitopts # whatchanged
 	if [ $quick -gt 0 ]
