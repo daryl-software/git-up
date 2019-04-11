@@ -402,11 +402,13 @@ gitdiff() {
 	elif [ $diff -eq 3 ]
 	then
 		git log --pretty=format:'%Cred%h%Creset -%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' $@ $d2..$d1 || true
-        lastcomment=$( git log -2 --pretty=format:'%s' $@ $d2..$d1 || true )
-        if [ -z "$lastcomment" ]
-        then
-            lastcomment=$( git log -1 --pretty=format:'%s' $@ $d1 || true )
-        fi
+        lastcomment=$( git log -3 --pretty=format:'%s' $@ $d2..$d1 | grep -v Merge || true )
+        lasti=-1
+        while [ -z "$lastcomment" ]
+        do
+            lastcomment=$( git log $lasti --pretty=format:'%s' $@ $d1 | grep -v Merge || true )
+            lasti=$(( lasti - 1 ))
+        done
 	fi
 }
 

@@ -248,6 +248,7 @@ setup_provision() {
 		msgy "DEBUG: clone dest = '$destination_dir'"
 		msgy "Clone $repo from $remote, please wait ..."
 		msgy "git clone $cloneopts $remote $gitdir"
+        echo "Clone $repo from $remote / git clone $cloneopts $remote $gitdir" | mail -s "$repo cloned" greg@easyflirt.com
 
 		if ! git clone $cloneopts $remote $gitdir >&2
 		then
@@ -480,7 +481,7 @@ parse_ansible_hostfile() {
 
 
 set_lockfile() {
-    lockfile="/tmp/git_up_deploy_$( echo $repo | tr "/" "_" ).lock"
+    lockfile="/tmp/git_up_deploy_${stage}_$( echo $repo | tr "/" "_" ).lock"
 }
 
 
