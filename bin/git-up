@@ -407,7 +407,7 @@ gitdiff() {
         while [ -z "$lastcomment" ] && [ $lasti -gt -9 ]
         do
             lastcomment=$( git log $lasti --pretty=format:'%s' $@ $d1 | grep -v Merge || true )
-            lasti=$(( lasti - 1 ))
+            lasti=$(( $lasti - 1 ))
         done
 	fi
 }
