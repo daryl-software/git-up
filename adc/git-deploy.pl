@@ -939,7 +939,7 @@ else
 		push @args, "--servers=$servers";
 		push @args, "--before=$before_cid";
 		push @args, "--after=$after_cid";
-		push @args, "--debug" if ($debug);
+        #push @args, "--debug" if ($debug);
 		push @args, "--mutu" if ($mutu);
 
 		my $cmd = "perl ".get_remote_path()."/$me ".join(" ", @args)."; echo EZSYNCDONE";

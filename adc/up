@@ -220,12 +220,13 @@ setup_provision() {
 		provisiondir="../../provisioning/$stage"
 	fi
 
-	if [ -n "$destination_dir" ]
-	then
-		gitdir="$provisiondir/$destination_dir"
-	else
-		gitdir="$provisiondir/$repo"
-	fi
+    gitdir="$provisiondir/$repo"
+	#if [ -n "$destination_dir" ]
+	#then
+	#	gitdir="$provisiondir/$destination_dir"
+	#else
+	#	gitdir="$provisiondir/$repo"
+	#fi
 
 	check_repo
 
