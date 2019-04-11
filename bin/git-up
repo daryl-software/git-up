@@ -404,7 +404,7 @@ gitdiff() {
 		git log --pretty=format:'%Cred%h%Creset -%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' $@ $d2..$d1 || true
         lastcomment=$( git log -3 --pretty=format:'%s' $@ $d2..$d1 | grep -v Merge || true )
         lasti=-1
-        while [ -z "$lastcomment" ]
+        while [ -z "$lastcomment" ] && [ $lasti -lt 9 ]
         do
             lastcomment=$( git log $lasti --pretty=format:'%s' $@ $d1 | grep -v Merge || true )
             lasti=$(( lasti - 1 ))
