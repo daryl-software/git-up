@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Usage: git up [options] <stage> [commit-ish]
 # Deploy commit to production servers
 # --help        : this help
