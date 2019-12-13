@@ -48,13 +48,10 @@ then
 		composerphpoptions="-d memory_limit=2G -d xdebug.remote_enable=0 -d xdebug.profiler_enable=0 -d xdebug.default_enable=0 /usr/bin/composer.phar"
 		composer="/usr/bin/php $composerphpoptions"
 
-		if grep -qE '"php" ?: ?"\^?7' composer.json
-		then
-			for phpversion in /usr/bin/php7*
-			do
-				composer="$phpversion $composerphpoptions"
-			done
-		fi
+        for phpversion in /usr/bin/php7.4 /usr/bin/php7.3
+        do
+            composer="$phpversion $composerphpoptions"
+        done
 
 		export COMPOSER_DISABLE_XDEBUG_WARN=1
 		if $composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install
@@ -67,7 +64,7 @@ then
 		if [ $composererror -gt 0 ]
 		then
 			echo -e "\033[41m\033[1mCOMPOSER INSTALL FAILED\033[0m" >&2
-			composer validate
+			$composer validate
 			exit 3
 		fi
 	fi
