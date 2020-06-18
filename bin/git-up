@@ -131,7 +131,7 @@ is_not_a_public_git_hoster() {
 
 
 get_remote_from_config() {
-	sshhost="$( git config --get $git_config_up_host || true )"
+	sshhost="$( git config --get $git_config_up_host || echo $GITUP_HOST )"
 }
 
 
