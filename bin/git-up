@@ -212,7 +212,7 @@ up_to_date() {
 
 
 install_hooks() {
-	for hook in $( dirname $0 )/hooks/*
+	for hook in $( dirname $0 )/../hooks/*
 	do
 		local hk=$( basename $hook )
 		debug "Install hook: $0 / $hook ($hk)"
