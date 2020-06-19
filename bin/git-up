@@ -467,6 +467,9 @@ do
 		--info)
 			infosonly=1
 			;;
+		--message)
+			deploymsg="$(</dev/stdin)"
+			;;
 		self-update)
 			install_dir="$( dirname $0 )"
 			if [ -z "$install_dir" ] || [ ! -d "$install_dir" ]
@@ -623,7 +626,7 @@ else
 			exit 7
 		fi
 	else
-		if [ -n "$allow_auto_deploy_message" ] && [ $allow_auto_deploy_message -eq 0 ] && [ "$stage" = "$tag_stage" ] 
+		if [ -z "$deploymsg" ] && [ -n "$allow_auto_deploy_message" ] && [ $allow_auto_deploy_message -eq 0 ] && [ "$stage" = "$tag_stage" ] 
 		then
 			blockcolor="\033[44m\033[1;37m"
 			echo -n $blockcolor
