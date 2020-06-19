@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# vim: set noexpandtab:
 # Usage: git up [options] <stage> [commit-ish]
 # Deploy commit to production servers
 # --help        : this help
@@ -212,12 +213,14 @@ up_to_date() {
 
 
 install_hooks() {
+	local hooksdir="$GITDIR/hooks"
+	test -d $hooksdir || mkdir -p $hooksdir
 	for hook in $( dirname $0 )/../hooks/*
 	do
 		local hk=$( basename $hook )
 		debug "Install hook: $0 / $hook ($hk)"
 		local mustbeinstalled=0
-		local dst="$GITDIR/hooks/$hk"
+		local dst="$hooksdir/$hk"
 		if [ ! -h "$dst" ]
 		then
 			mustbeinstalled=1
