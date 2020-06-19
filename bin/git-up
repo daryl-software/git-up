@@ -248,7 +248,7 @@ install_hooks() {
 		fi
 		if [ $mustbeinstalled -gt 0 ]
 		then
-			echo "- install hook $hk"
+			echo "- install hook $hk ($hook -> $dst)"
 			ln -s "$hook" "$dst"
 		fi
 	done
