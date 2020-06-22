@@ -156,7 +156,7 @@ get_remote() {
 			#fi
 			upopts="--remote $remoteuri $upopts"
 
-			reponame=$( echo $remoteuri | grep -Eo '/(\w+/.+?).git' )
+			reponame=$( echo $remoteuri | grep -Eo '/(\w+/.+)(.git)?' )
 			reponame=${reponame#/}
 			repolongname="$reponame"
 			#repolongname=${repolongname%%.git}
