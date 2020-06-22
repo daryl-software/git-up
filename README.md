@@ -187,7 +187,7 @@ Ansible roles are available to help you setup your provisioning and destination 
 - perl
 - rsync
 
-On OSX bash is pretty old (3.2), you need to upgrade it with: `brew install bash`.
+On OSX bash is pretty old (3.2), you need to upgrade it with: `brew install bash coreutils`.
 
 #### gitolite specific
 
