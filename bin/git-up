@@ -50,7 +50,7 @@ debug=0 # --debug
 check=0
 force=0
 diff=0
-upopts="--user $USER"
+upopts="--user $( test -n "$GITLAB_USER_LOGIN" && echo "$GITLAB_USER_LOGIN" || echo "$USER" )"
 infosonly=0
 commitish=
 commitset=0
@@ -64,6 +64,8 @@ deploymsg=
 lastcomment=
 GITROOT=
 GITDIR=
+me="$( realpath "$( test -L "$0" && readlink -f "$0" || echo "$0" )" )"
+medir="$( dirname $me )"
 
 #
 # FUNCTIONS
@@ -215,10 +217,10 @@ up_to_date() {
 install_hooks() {
 	local hooksdir="$GITDIR/hooks"
 	test -d $hooksdir || mkdir -p $hooksdir
-	for hook in $( dirname $0 )/../hooks/*
+	for hook in $medir/../hooks/*
 	do
 		local hk=$( basename $hook )
-		debug "Install hook: $0 / $hook ($hk)"
+		debug "Install hook: $hook ($hk)"
 		local mustbeinstalled=0
 		local dst="$hooksdir/$hk"
 		if [ ! -h "$dst" ]
@@ -248,15 +250,19 @@ install_hooks() {
 		fi
 		if [ $mustbeinstalled -gt 0 ]
 		then
-			echo "- install hook $hk ($hook -> $dst)"
+			echo "- install hook $hk"
 			ln -s "$hook" "$dst"
 		fi
 	done
 }
 
 
+auto_message() {
+	echo "$CI_COMMIT_REF_NAME : $CI_COMMIT_MESSAGE"
+}
+
 get_next_tag() {
-	local autotag="$( dirname $0 )/autotag.pl"
+	local autotag="$medir/autotag.pl"
 	if type perl >/dev/null && [ -e $autotag ]
 	then
 		autotag="perl $autotag"
@@ -473,8 +479,11 @@ do
 		--message)
 			deploymsg="$(</dev/stdin)"
 			;;
+		--auto-message)
+			deploymsg="$( auto_message )"
+			;;
 		self-update)
-			install_dir="$( dirname $0 )"
+			install_dir="$medir"
 			if [ -z "$install_dir" ] || [ ! -d "$install_dir" ]
 			then
 				echo "Current install-dir not found ($install_dir)."
