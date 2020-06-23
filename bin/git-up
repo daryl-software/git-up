@@ -217,8 +217,12 @@ up_to_date() {
 install_hooks() {
 	local hooksdir="$GITDIR/hooks"
 	test -d $hooksdir || mkdir -p $hooksdir
-	for hook in $medir/../hooks/*
+	for hook in $medir/../hooks/* $medir/hooks/*
 	do
+		if [ ! -e $hook ]
+		then
+			continue
+		fi
 		local hk=$( basename $hook )
 		debug "Install hook: $hook ($hk)"
 		local mustbeinstalled=0
