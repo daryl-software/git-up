@@ -438,6 +438,12 @@ sub rsyncto # {{{
 		$default_rsync_opts .= " --include-from=$srcdir.rsync_includes ";
 	}
 	
+	if (-e $srcdir.'.rsync_files_from')
+	{
+		$rsync_opts .= " --files-from=$srcdir.rsync_files_from ";
+		$default_rsync_opts .= " --files-from=$srcdir.rsync_files_from ";
+	}
+	
 	if ($deploymode)
 	{
 		$cmd = "$rsync $rsync_opts $srcdir/ rsync://gitup\@$host/$rsync_dest/";
