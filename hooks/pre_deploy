@@ -48,9 +48,13 @@ then
 		composerphpoptions="-d memory_limit=2G -d xdebug.remote_enable=0 -d xdebug.profiler_enable=0 -d xdebug.default_enable=0 /usr/bin/composer.phar"
 		composer="/usr/bin/php $composerphpoptions"
 
-        for phpversion in /usr/bin/php7.4 /usr/bin/php7.3
+        #for phpversion in /usr/bin/php7.4
+        for phpversion in /usr/bin/php7.3 /usr/bin/php7.4
         do
-            composer="$phpversion $composerphpoptions"
+            if [ -e "$phpversion" ]
+            then
+                composer="$phpversion $composerphpoptions"
+            fi
         done
 
 		export COMPOSER_DISABLE_XDEBUG_WARN=1
