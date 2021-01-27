@@ -33,8 +33,9 @@ my $rsync = "/usr/bin/rsync";
 my $default_rsync_opts = "
 	-rlptgoD
 	--progress
-	--stats 
-	--human-readable 
+	--stats
+	--acls
+	--human-readable
 	--one-file-system
 	--delay-updates
 	--delete-delay
