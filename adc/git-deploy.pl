@@ -73,6 +73,7 @@ my $mutu = 0;
 my $minrev = 0;
 my $before_cid = 'unknown_before';
 my $after_cid = '';
+my $deploy_tags;
 # ssh
 local (*SSHIN, *SSHOUT, *SSHERR); # Tunnel's standard IN/OUT/ERR 
 my $sshio;
@@ -670,6 +671,17 @@ sub hook
 	chdir($cwd);
 }
 
+sub custom_hooks
+{
+	my $hooktype = shift;
+	if ($deploy_tags) {
+		foreach my $tag (split(/[#,]/, $deploy_tags)) {
+			next unless $tag;
+			hook($hooktype."-".$tag);
+		}
+	}
+}
+
 
 # so usefull ...
 sub get_first_defined
@@ -716,7 +728,6 @@ sub check_myself
 		logfatal("💢 Unable to upload myself :(");
 	}
 }
-
 
 # convenient function
 sub sshrun
@@ -794,7 +805,8 @@ GetOptions (
 	"master=s" => \$master,
 	"servers=s" => \$servers,
 	"before=s" => \$before_cid,
-	"after=s" => \$after_cid
+	"after=s" => \$after_cid,
+	"tags=s" => \$deploy_tags
 );
 
 Usage unless (defined($repo) && defined($stage));
@@ -834,6 +846,7 @@ if ($deploymode)
 	my @hosts = split(",", $servers);
 
 	hook('mid');
+	custom_hooks('mid');
 
 	for (my $i=0; $i<scalar(@hosts); $i++)
 	{
@@ -894,7 +907,9 @@ if ($deploymode)
 		$display_th->join();
 	}
 	hook('post');
+	custom_hooks('post');
 }
+
 
 #
 # SOURCE => MASTER
@@ -954,6 +969,7 @@ else
 		push @args, "--after=$after_cid";
         #push @args, "--debug" if ($debug);
 		push @args, "--mutu" if ($mutu);
+		push @args, "--tags=$deploy_tags" if defined($deploy_tags);
 
 		my $cmd = "perl ".get_remote_path()."/$me ".join(" ", @args)."; echo EZSYNCDONE";
 

@@ -813,10 +813,10 @@ EOF
 		exit 16
 	fi
 
-    if [ -z "$rsync_dir" ]
-    then
-        rsync_dir=$destination_dir
-    fi
+	if [ -z "$rsync_dir" ]
+	then
+		rsync_dir=$destination_dir
+	fi
 
 	msg "📦 Delivering $repo to $stage on $sync_to ..."
 	local sync_cmd="./git-deploy.pl
@@ -850,27 +850,34 @@ EOF
 --servers=$servers"
 	fi
 
+	local tags=$( echo -n "$deploymsg" | grep -Eo '#(\w+)' | tr "\n" "," )
+	if [ -n "$tags" ]
+	then
+		sync_cmd="$sync_cmd 
+--tags=$tags"
+	fi
+
 	if [ $use_ssh_agent -gt 0 ]
 	then
 		eval $( ssh-agent ) >>$ssh_agent_debug_log
-        if [ -n "$ssh_key" ]
-        then
-    		ssh-add ~/.ssh/$ssh_key 2>>$ssh_agent_debug_log
-        else
-    		ssh-add 2>>$ssh_agent_debug_log
-        fi
+		if [ -n "$ssh_key" ]
+		then
+			ssh-add ~/.ssh/$ssh_key 2>>$ssh_agent_debug_log
+		else
+			ssh-add 2>>$ssh_agent_debug_log
+		fi
 	fi
 
 	debug "$sync_cmd"
-	if $sync_cmd 2>&1
+	if echo "$deploymsg" | $sync_cmd 2>&1
 	then
 		notify_deploy "$repo" "$stage" $( get_user ) $master $before $after $sync_to "$deploymsg"
 		hook "post_deploy" $before $after $( get_user )
-        okfaces=("(͠≖ ͜ʖ͠≖)" "ᕙ(▀̿̿Ĺ̯̿̿▀̿ ̿) ᕗ" "ᕦ( ͡°╭͜ʖ╮͡° )ᕤ" )
-        selectedface=${okfaces[$RANDOM % ${#okfaces[@]} ]}
+		okfaces=("(͠≖ ͜ʖ͠≖)" "ᕙ(▀̿̿Ĺ̯̿̿▀̿ ̿) ᕗ" "ᕦ( ͡°╭͜ʖ╮͡° )ᕤ" )
+		selectedface=${okfaces[$RANDOM % ${#okfaces[@]} ]}
 		echo -n "\033[40m\033[1;34m👍 Deployed successfully          "  >&2
-        if [ "$selectedface" = "old" ]
-        then
+		if [ "$selectedface" = "old" ]
+		then
 		cat <<EOF
 
 ╲╭━━━━╮╲╲
@@ -880,16 +887,16 @@ EOF
 ╲╰┳━━┳╯╲╲╲╲╲╲╲╲╲
 ╲╲┛╲╲┗╲╲╲╲╲╲╲╲╲
 EOF
-        else
-            echo -n "$selectedface" >&2
-        fi
+		else
+			echo -n "$selectedface" >&2
+		fi
 		echo "\033[0m" >&2
 		cleanup
 	else
 		cleanup
-        # error "FAILED        (╥﹏╥)"
-        errorfaces=("(╥﹏╥)" "凸( ͡° ͜ʖ ͡°)凸" "( ཀ ʖ̯ ཀ)" "´༎ຶ ͜ʖ ༎ຶ \`" "( ͡⚆ ͜ʖ ͡⚆)╭∩╮" "¯\\_(° ͜ʖ °)_/¯" "乁( ⁰͡ Ĺ̯ ⁰͡ ) ㄏ" "( ͡ಠ ʖ̯ ͡ಠ)")
-        selectedface=${errorfaces[$RANDOM % ${#errorfaces[@]} ]}
+		# error "FAILED        (╥﹏╥)"
+		errorfaces=("(╥﹏╥)" "凸( ͡° ͜ʖ ͡°)凸" "( ཀ ʖ̯ ཀ)" "´༎ຶ ͜ʖ ༎ຶ \`" "( ͡⚆ ͜ʖ ͡⚆)╭∩╮" "¯\\_(° ͜ʖ °)_/¯" "乁( ⁰͡ Ĺ̯ ⁰͡ ) ㄏ" "( ͡ಠ ʖ̯ ͡ಠ)")
+		selectedface=${errorfaces[$RANDOM % ${#errorfaces[@]} ]}
 		error "😱😱😱 FAILED     $selectedface"
 		exit 3
 	fi
