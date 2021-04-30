@@ -811,6 +811,7 @@ GetOptions (
 
 Usage unless (defined($repo) && defined($stage));
 
+open STDERR, '>&STDOUT';
 loginit($logfile, $debug);
 
 # Sanity checks ...
