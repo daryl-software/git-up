@@ -597,7 +597,7 @@ then
 else
 	install_hooks
 
-	check_pushed
+	#check_pushed
 	fetch_refs
 
 	gitdiff 3 $commitish $gitopts # whatchanged
