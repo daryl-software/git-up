@@ -607,7 +607,7 @@ else
 	fi
 	if [ $tag -gt 0 -a $commitset -eq 0 ]
 	then
-		check_pushed strict
+		#check_pushed strict
 
 		if [ $commitset -gt 0 ] && grep -qE "$tag_pattern" <<< $commitish
 		then
