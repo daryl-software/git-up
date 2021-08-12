@@ -844,7 +844,11 @@ $default_rsync_opts =~ s/\n\t?/ /g;
 if ($deploymode)
 {
 	my @pids;
-	my @hosts = split(",", $servers);
+	my @hosts;
+	if ($servers)
+	{
+		@hosts = split(",", $servers);
+	}
 
 	hook('mid');
 	custom_hooks('mid');
