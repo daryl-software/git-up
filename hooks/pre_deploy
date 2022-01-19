@@ -48,14 +48,32 @@ then
 		composerphpoptions="-d memory_limit=2G -d xdebug.remote_enable=0 -d xdebug.profiler_enable=0 -d xdebug.default_enable=0 /usr/bin/composer.phar"
 		composer="/usr/bin/php $composerphpoptions"
 
-        #for phpversion in /usr/bin/php7.4
-        for phpversion in /usr/bin/php7.3 /usr/bin/php7.4
-        do
-            if [ -e "$phpversion" ]
+		regex='([0-9.]+)'
+		if [[ $( jq .require.php composer.json ) =~ $regex ]]
+		then
+			php=${BASH_REMATCH[1]}
+            if [ -n "$GITUP_DOCKER_REGISTRY" ] && [ -n "$GITUP_DOCKER_REGISTRY" ]
             then
-                composer="$phpversion $composerphpoptions"
+                echo "$GITUP_DOCKER_REGISTRY_TOKEN" | docker login -u $GITUP_DOCKER_REGISTRY_USER --password-stdin $GITUP_DOCKER_REGISTRY
+                docker pull $GITUP_DOCKER_IMAGE_PHP:php$php || true # don't fail if registry is down
             fi
-        done
+			if docker images | grep $GITUP_DOCKER_IMAGE_PHP | grep -q php$php
+			then
+				echo "Using docker image gitlab-registry.easyflirt.com/ops/docker/php:php$php"
+				composer="docker run -u $(id -u):$(id -g) -v $PWD/:/data/users/docker/ --rm gitlab-registry.easyflirt.com/ops/docker/php:php$php composer"
+			else
+				#echo "Docker image is missing: gitlab-registry.easyflirt.com/ops/docker/php:php$php"
+				#for phpversion in /usr/bin/php7.4
+				for phpversion in /usr/bin/php7.4 /usr/bin/php8.1 /usr/bin/php$php
+				do
+					if [ -e "$phpversion" ]
+					then
+						composer="$phpversion $composerphpoptions"
+					fi
+				done
+			fi
+		fi
+		echo "COMPOSER: $composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install"
 
 		export COMPOSER_DISABLE_XDEBUG_WARN=1
 		if $composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install
