@@ -13,81 +13,84 @@ set -e
 
 if [ -d "$gitdir" ]
 then
-	cd "$gitdir" || exit 2
+    cd "$gitdir" || exit 2
 
-	#
-	# composer
-	#
-	# "composer install" only if composer.lock is present AND is in the diff
+    #
+    # composer
+    #
+    # "composer install" only if composer.lock is present AND is in the diff
 
-	composer_update=0
-	composererror=0
+    composer_update=0
+    composererror=0
 
-	if [ ! -d vendor ]
-	then
-		composer_update=1
-	else
-		if [ -n "$before" ] && [ -n "$after" ]
-		then
-			if [ "$before" = "$after" ]
-			then
-				composer_update=1
-			elif git diff --name-only $before $after | grep -q ^composer\.lock
-			then
-				composer_update=1
-			fi
-		fi
-	fi
+    if [ ! -d vendor ]
+    then
+        composer_update=1
+    else
+        if [ -n "$before" ] && [ -n "$after" ]
+        then
+            if [ "$before" = "$after" ]
+            then
+                composer_update=1
+            elif git diff --name-only $before $after | grep -q ^composer\.lock
+            then
+                composer_update=1
+            fi
+        fi
+    fi
 
-	if [ -e composer.lock ] && [ $composer_update -gt 0 ]
-	then
-		unset GIT_DIR
-		unset GIT_WORK_TREE
-		composererror=1
-		echo -e "\033[45m\033[1;36m>= COMPOSER INSTALL <=\033[0m"
-		composerphpoptions="-d memory_limit=2G -d xdebug.remote_enable=0 -d xdebug.profiler_enable=0 -d xdebug.default_enable=0 /usr/bin/composer.phar"
-		composer="/usr/bin/php $composerphpoptions"
+    if [ -e composer.lock ] && [ $composer_update -gt 0 ]
+    then
+        unset GIT_DIR
+        unset GIT_WORK_TREE
+        composererror=1
+        echo -e "\033[45m\033[1;36m>= COMPOSER INSTALL <=\033[0m"
+        composerphpoptions="-d memory_limit=2G -d xdebug.remote_enable=0 -d xdebug.profiler_enable=0 -d xdebug.default_enable=0 /usr/bin/composer.phar"
+        composer="/usr/bin/php $composerphpoptions"
 
-		regex='([0-9.]+)'
-		if [[ $( jq .require.php composer.json ) =~ $regex ]]
-		then
-			php=${BASH_REMATCH[1]}
+        set +e
+        regex='([0-9.]+)'
+        if [[ $( jq .require.php composer.json ) =~ $regex ]]
+        then
+            php=${BASH_REMATCH[1]}
             if [ -n "$GITUP_DOCKER_REGISTRY" ] && [ -n "$GITUP_DOCKER_REGISTRY" ]
             then
                 echo "$GITUP_DOCKER_REGISTRY_TOKEN" | docker login -u $GITUP_DOCKER_REGISTRY_USER --password-stdin $GITUP_DOCKER_REGISTRY
-                docker pull $GITUP_DOCKER_IMAGE_PHP:php$php || true # don't fail if registry is down
+                echo "COMPOSER: trying to pull $GITUP_DOCKER_IMAGE_PHP:php$php"
+                docker pull $GITUP_DOCKER_IMAGE_PHP:php$php 2>/dev/null || true # don't fail if registry is down
             fi
-			if docker images | grep $GITUP_DOCKER_IMAGE_PHP | grep -q php$php
-			then
-				echo "Using docker image gitlab-registry.easyflirt.com/ops/docker/php:php$php"
-				composer="docker run -u $(id -u):$(id -g) -v $PWD/:/data/users/docker/ --rm gitlab-registry.easyflirt.com/ops/docker/php:php$php composer"
-			else
-				#echo "Docker image is missing: gitlab-registry.easyflirt.com/ops/docker/php:php$php"
-				#for phpversion in /usr/bin/php7.4
-				for phpversion in /usr/bin/php7.4 /usr/bin/php8.1 /usr/bin/php$php
-				do
-					if [ -e "$phpversion" ]
-					then
-						composer="$phpversion $composerphpoptions"
-					fi
-				done
-			fi
-		fi
-		echo "COMPOSER: $composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install"
+            if docker images | grep $GITUP_DOCKER_IMAGE_PHP | grep -q php$php
+            then
+                echo "Using docker image gitlab-registry.easyflirt.com/ops/docker/php:php$php"
+                composer="docker run -u $(id -u):$(id -g) -v $PWD/:/data/users/docker/ --rm gitlab-registry.easyflirt.com/ops/docker/php:php$php composer"
+            else
+                #echo "Docker image is missing: gitlab-registry.easyflirt.com/ops/docker/php:php$php"
+                #for phpversion in /usr/bin/php7.4
+                for phpversion in /usr/bin/php8.1 /usr/bin/php7.4 /usr/bin/php$php
+                do
+                    if [ -e "$phpversion" ]
+                    then
+                        composer="$phpversion $composerphpoptions"
+                    fi
+                done
+            fi
+        fi
+        echo "COMPOSER: $composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install"
+        set -e
 
-		export COMPOSER_DISABLE_XDEBUG_WARN=1
-		if $composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install
-		then
-			composererror=0
-		else
-			composererror=1
-		fi
+        export COMPOSER_DISABLE_XDEBUG_WARN=1
+        if $composer --no-interaction --optimize-autoloader --no-dev --ansi --prefer-dist install
+        then
+            composererror=0
+        else
+            composererror=1
+        fi
 
-		if [ $composererror -gt 0 ]
-		then
-			echo -e "\033[41m\033[1mCOMPOSER INSTALL FAILED\033[0m" >&2
-			$composer validate
-			exit 3
-		fi
-	fi
+        if [ $composererror -gt 0 ]
+        then
+            echo -e "\033[41m\033[1mCOMPOSER INSTALL FAILED\033[0m" >&2
+            $composer validate
+            exit 3
+        fi
+    fi
 fi
