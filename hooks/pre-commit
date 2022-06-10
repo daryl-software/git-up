@@ -8,7 +8,6 @@ exec 1>&2
 
 
 against=HEAD
-against=e7f3561cacd53041585e0fe2001fe1856f6e6b9b
 gotphp=0
 gotperl=0
 gotbash=0
