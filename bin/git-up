@@ -177,7 +177,7 @@ check_connection() {
 
 
 up_to_date() {
-	git fetch --quiet --tags origin
+	git fetch --quiet --tags origin || git fetch --tags origin
 
 	local needupdate=0
 	local lastucvar="up.last-update-check"

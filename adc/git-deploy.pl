@@ -64,6 +64,7 @@ my $master;
 my $servers;
 my $config;
 my $debug = 0;
+my $quick = 0;
 my $stage;
 my $opt_dryrun = 0;
 my $progress_i = 0;
@@ -654,6 +655,7 @@ sub hook
 {
 	my $hooktype = shift;
 	my $hook = "$hooksdir/$hooktype-deploy";
+    return if ($quick);
 	
 	my $cwd = getcwd;
 	chdir ($sourcedir) or die "$!: ".$sourcedir;
@@ -674,7 +676,7 @@ sub hook
 sub custom_hooks
 {
 	my $hooktype = shift;
-	if ($deploy_tags) {
+	if ($deploy_tags && !$quick) {
 		foreach my $tag (split(/[#,]/, $deploy_tags)) {
 			next unless $tag;
 			hook($hooktype."-".$tag);
@@ -793,6 +795,7 @@ GetOptions (
 	"dry-run" => \$opt_dryrun,
 	"help" => \&Usage,
 	"debug" => \$debug,
+	"quick" => \$quick,
 	"deploy" => \$deploymode,
 	"mutu" => \$mutu,
 	"repo=s" => \$repo,
@@ -1033,6 +1036,7 @@ else
 	# Wait for SSH
 	logdebug("Waiting $sshpid\n");
 	waitpid($sshpid, 0);
+    $quick = 0;
 
 	# An error occured on at least one slave
 	if ($#failedsync >= 0)

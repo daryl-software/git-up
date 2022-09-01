@@ -20,7 +20,7 @@ then
     #
     # "composer install" only if composer.lock is present AND is in the diff
 
-    composer_update=0
+    composer_update=1
     composererror=0
 
     if [ ! -d vendor ]
@@ -61,8 +61,8 @@ then
             fi
             if docker images | grep $GITUP_DOCKER_IMAGE_PHP | grep -q php$php
             then
-                echo "Using docker image gitlab-registry.easyflirt.com/ops/docker/php:php$php"
-                composer="docker run -u $(id -u):$(id -g) -v $PWD/:/data/users/docker/ --rm gitlab-registry.easyflirt.com/ops/docker/php:php$php composer"
+                echo -e "\033[45m\033[1;36mCOMPOSER: Using docker image $GITUP_DOCKER_IMAGE_PHP:php$php\033[0m"
+                composer="docker run -u $(id -u):$(id -g) -v $PWD/:/data/users/docker/ --rm -t $GITUP_DOCKER_IMAGE_PHP:php$php composer"
             else
                 #echo "Docker image is missing: gitlab-registry.easyflirt.com/ops/docker/php:php$php"
                 #for phpversion in /usr/bin/php7.4

@@ -138,6 +138,10 @@ hook() {
 		else
 			get_conf
 			hookfile="${!hookname}"
+			export GITUP_DOCKER_REGISTRY_USER=$docker_registry_user
+			export GITUP_DOCKER_REGISTRY_TOKEN=$docker_registry_token
+			export GITUP_DOCKER_REGISTRY=$docker_registry
+			export GITUP_DOCKER_IMAGE_PHP=$docker_image_php
 		fi
 		debug "hook '$hookname' ?"
 		if [ -n "$hookfile" ]
@@ -835,6 +839,12 @@ EOF
 	then
 		sync_cmd="$sync_cmd 
 --debug"
+	fi
+
+	if [ $quick -gt 0 ]
+	then
+		sync_cmd="$sync_cmd 
+--quick"
 	fi
 
 	debug "mutualized=$mutualized"
