@@ -62,7 +62,7 @@ then
             if docker images | grep $GITUP_DOCKER_IMAGE_PHP | grep -q php$php
             then
                 echo -e "\033[45m\033[1;36mCOMPOSER: Using docker image $GITUP_DOCKER_IMAGE_PHP:php$php\033[0m"
-                composer="docker run -u $(id -u):$(id -g) -v $PWD/:/data/users/docker/ --rm -t $GITUP_DOCKER_IMAGE_PHP:php$php composer"
+                composer="docker run -u $USER -v $PWD/:/data/users/docker/ --rm -t $GITUP_DOCKER_IMAGE_PHP:php$php composer"
             else
                 #echo "Docker image is missing: gitlab-registry.easyflirt.com/ops/docker/php:php$php"
                 #for phpversion in /usr/bin/php7.4
