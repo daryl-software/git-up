@@ -87,10 +87,18 @@ do
 	chmod u+x "$dsthook"
 done
 
-if type realpath >/dev/null 2>&1
+if ! type realpath >/dev/null 2>&1
 then
-	installdir=`realpath $installdir`
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+        brew install bash coreutils
+    else
+        echo "Please install 'realpath'"
+        echo "Tip: apt install coreutils"
+        exit 5
+    fi
 fi
+installdir=`realpath $installdir`
 
 if [ "$alias" -eq 1 ]
 then
