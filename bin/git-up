@@ -658,7 +658,11 @@ else
 				#echo "DEBUG: last comment='$lastcomment'"
 				#echo -n "💬 \033[4m\033[1mMessage:\033[0m "
 				deploymsg=
-				read -e -p "💬 Message: " -i "$lastcomment" deploymsg
+				if ! read -e -p "💬 Message: " -i "$lastcomment" deploymsg
+				then
+					echo "💥 needs 'brew install bash coreutils' on OSX to have read -i param, continuing anyway..."
+					read -e -p "💬 Message: " deploymsg
+				fi
 				if [ -n "$deploymsg" ]
 				then
 					deploymsgvalid=1
