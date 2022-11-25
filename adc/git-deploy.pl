@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w
+# vim: set ts=4 sw=4 noexpandtab:
 #
 # git-deploy.pl - deploy a git repository to a master server
 # then it deploys to production servers
@@ -655,9 +656,10 @@ sub hook
 {
 	my $hooktype = shift;
 	my $hook = "$hooksdir/$hooktype-deploy";
-    return if ($quick);
+	return if ($quick);
 	
 	my $cwd = getcwd;
+	my $ret = 0;
 	chdir ($sourcedir) or die "$!: ".$sourcedir;
 
 	logdebug ("Run hook $sourcedir/$hook if exists$/");
@@ -668,19 +670,25 @@ sub hook
 		{
 			logfatal("💢 Hook '$hooktype' FAILED: exitcode=$? ($!)");
 		}
+		$ret = 1;
 	}
 
 	chdir($cwd);
+	return $ret;
 }
 
 sub custom_hooks
 {
 	my $hooktype = shift;
 	if ($deploy_tags && !$quick) {
+		open(my $fp, '>', $sourcedir.'/.hook-actions') or logwarn('hooks', "Can't open > $sourcedir/.hook-actions: $!");
 		foreach my $tag (split(/[#,]/, $deploy_tags)) {
 			next unless $tag;
-			hook($hooktype."-".$tag);
+			unless (hook($hooktype."-".$tag)) {
+				print $fp "$tag$/" if $fp;
+			}
 		}
+		close $fp if $fp;
 	}
 }
 
