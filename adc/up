@@ -815,7 +815,7 @@ EOF
 	debug "Deploymsg: ##$deploymsg##"
 
 	hook "pre_deploy" $before $after $( get_user )
-	local_hook "pre-deploy" $before $after $( get_user )
+	local_hook "pre-deploy" $before $after $( get_user ) $sync_to
 
 	if [ -z "$master" ]
 	then
@@ -889,7 +889,7 @@ EOF
 	then
 		notify_deploy "$repo" "$stage" $( get_user ) $master $before $after $sync_to "$deploymsg"
 		hook "post_deploy" $before $after $( get_user )
-		echo "\033[40m\033[1;34m💫✨✨✨✨✨     Deployed successfully   ✨✨✨✨✨💫 \033[0m" >&2
+        echo "\033[40m\033[1;34m💫✨✨✨✨✨   Deployed successfully at $( date -R )  ✨✨✨✨✨💫 \033[0m" >&2
 		cleanup
 	else
 		cleanup
