@@ -652,6 +652,9 @@ else
 			echo -n "╾────────────────────────────────────────────────────────────────────╼"
 			echo "\033[0m"
 
+			# Empty keyboard buffer:
+			while read -t 0.01; do :; done
+
 			deploymsgvalid=0
 			while [ $deploymsgvalid -eq 0 ]
 			do
