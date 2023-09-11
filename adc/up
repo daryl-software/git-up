@@ -20,6 +20,7 @@ sync_to=
 config_loaded=0
 remote=
 deployuser=
+lockfile_delay=0
 
 
 # GIT INFOS
@@ -488,9 +489,12 @@ set_lockfile() {
     lockfile="/tmp/git_up_deploy_${stage}_$( echo $repo | tr "/" "_" ).lock"
 }
 
-
-check_lockfile() {
-	[ -e $lockfile ]
+get_lockfile_delay() {
+	local temporize=$( get_stage_var temporize )
+    local lastm=$( stat -c %Y $lockfile )
+    local now=$( date +%s )
+    local td=$(( $now - $lastm ))
+    lockfile_delay=$(( $temporize - $td ))
 }
 
 
@@ -501,19 +505,27 @@ wait_for_lock() {
 	trap cleanup INT QUIT TERM EXIT
 
 	# LOCK
-	while check_lockfile
+	while [ -e $lockfile ]
 	do
-		cat $lockfile
-		local lastm=$( stat -c %Y $lockfile )
-		local now=$( date +%s )
-		local td=$(( $now - $lastm ))
-		if [ $td -gt 120 ]
+        get_lockfile_delay
+
+        # bug protection
+		if [ $lockfile_delay -gt 7200 ]
 		then
-			warn "Lock file too old (2min), removing it..."
+			warn "Lock file too old (2h), removing it..."
 			rm -f $lockfile
 		fi
-		sleep 1
+
+		if [ $lockfile_delay -gt 0 ]
+        then
+            cat $lockfile
+            echo "$lockfile_delay sec to wait ..."
+            sleep 1
+        else
+            rm -f $lockfile
+        fi
 	done
+
 }
 
 
@@ -549,13 +561,13 @@ is_super_user() {
 
 create_lock() {
 	set_lockfile
-	echo "\033[43m\033[1;31m$( get_user ) is deploying '$repo' on $stage with $commitish, please wait ...\033[0m" > $lockfile
+	echo "\033[43m\033[1;31m$( get_user ) has deployed '$repo' in $stage on commit $commitish$sync_to, please wait ...\033[0m" > $lockfile
 }
 
 
 cleanup () {
 	local file=
-	for file in $lockfile $difffile
+	for file in $difffile
 	do
 		test -e $file && rm -f $file
 	done
@@ -728,6 +740,17 @@ EOF
 		echo "\033[0m" >&2
 		exit 42
 	fi # }}}
+
+#    ### TMP
+#    if [ "$stage" = "prod" ] && [ $( get_user ) != "gregory" ] # && grep -qE 'pay|fusion|global/global|dating/graphql|cpg' <<< "$repo"
+#    then
+#		echo "\033[41m\033[1m" >&2
+#		cat <<EOF >&2
+#🛑 Sorry, denied. See #tech-payment
+#EOF
+#		echo "\033[0m" >&2
+#		exit 42
+#    fi
 
 	local ssh_agent_debug_log=/tmp/git-up.ssh_agent_debug.log
 
