@@ -21,7 +21,6 @@ config_loaded=0
 remote=
 deployuser=
 lockfile_delay=0
-minimum_deploy_message_size=20
 
 
 # GIT INFOS
