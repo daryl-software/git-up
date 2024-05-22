@@ -837,7 +837,8 @@ EOF
 	fi
 	debug "Deploymsg: ##$deploymsg##"
 
-	if [[ ${#deploymsg} -lt $minimum_deploy_message_size ]]; then
+	if [ ${#deploymsg} -lt $minimum_deploy_message_size ] &&  [ "$stage" = "prod" ]
+	then
 		echo "Deploy message error\n$deploymsg\nMessage is too short (minimum 20 characters)"
 		exit 32
 	fi
