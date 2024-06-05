@@ -759,6 +759,12 @@ EOF
 		error "WTF ? gitdir not found [$gitdir]"
 		exit 14
 	fi
+	# The grep git branch stuff is to make sure the commit we want to git up
+	if [ "$stage" = "prod" ] && [ $( get_user ) != "joel" ] && grep -qE 'pay' <<< "$repo" && git branch $(git symbolic-ref --short HEAD) --contains $sync_to | grep master
+	then
+		echo "Cannot git up $sync_to since the commit is not in the master branch of pay"
+		exit 42
+   fi
 
 	# Get deployment vars
 	local inventory=$( get_stage_var inventory )
@@ -804,7 +810,7 @@ EOF
 	fi
 
 	local before=$( git rev-parse HEAD )
-
+    
 	# OK, then checkout repository to what we want
 	provision
 	debug "Checkout to $sync_to"
