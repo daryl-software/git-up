@@ -810,7 +810,7 @@ EOF
 	fi
 
 	local before=$( git rev-parse HEAD )
-    
+
 	# OK, then checkout repository to what we want
 	provision
 	debug "Checkout to $sync_to"
