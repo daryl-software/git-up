@@ -760,7 +760,7 @@ EOF
 		exit 14
 	fi
 	# The grep git branch stuff is to make sure the commit we want to git up
-	if [ "$stage" = "prod" ] && [ $( get_user ) != "joel" ] && grep -qE 'pay|cpg' <<< "$repo" && git branch $(git symbolic-ref --short HEAD) --contains $sync_to | grep master
+	if [ "$stage" = "prod" ] && [ $( get_user ) != "joel" ] && grep -qE 'pay|cpg' <<< "$repo" && git branch $(git symbolic-ref --short HEAD) --contains $sync_to | grep -q -v "master"
 	then
 		echo "Cannot git up $sync_to since the commit is not in the master branch of pay"
 		exit 42
