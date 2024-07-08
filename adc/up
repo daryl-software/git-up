@@ -762,9 +762,16 @@ EOF
 	# The grep git branch stuff is to make sure the commit we want to git up
 	if [ "$stage" = "prod" ] && [ $( get_user ) != "joel" ] && grep -qE 'pay|cpg' <<< "$repo" && git branch  --contains $sync_to | grep -q -v "master"
 	then
-		echo "Cannot git up $sync_to since the commit is not in the master branch of pay"
-		exit 42
-   fi
+		# Checking if there was a recent commit by comparing timestamp
+		last_commit_timestamp=`date -d "$(git log -1 --format=%cd --date=iso)" +%s`
+		current_timestamp=$(date +%s)
+		time_difference=$((current_timestamp - last_commit_timestamp))
+		# This is to by pass the "not deploying" outside of master if a commit was merged recently
+		if  [ $time_difference -gt 300 ]; then
+			echo "Cannot git up $sync_to since the commit is not in the master branch of pay"
+			exit 42
+		fi
+	fi
 
 	# Get deployment vars
 	local inventory=$( get_stage_var inventory )
