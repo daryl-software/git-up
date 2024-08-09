@@ -762,6 +762,16 @@ EOF
 	# The grep git branch stuff is to make sure the commit we want to git up
 	if [ "$stage" = "prod" ] && [ $( get_user ) != "joel" ] && grep -qE 'pay|cpg' <<< "$repo" && git branch  --contains $sync_to | grep -q -v "master"
 	then
+		# Force git up on pay to be done during working hours
+		current_time=$(date +"%H:%M")
+		am_start_time="08:30"
+		am_end_time="11:30"
+		pm_start_time="13:00"
+		pm_end_time="17:30"
+		if { [[ "$current_time" < "$am_start_time" ]] || [[ "$current_time" > "$am_end_time" && "$current_time" < "$pm_start_time" ]] || [[ "$current_time" > "$pm_end_time" ]]; }; then
+			echo "Git up prod should be done between 09:30 and 11:30 or between 13:00 and 17:30."
+			exit 43
+		fi
 		# Checking if there was a recent commit by comparing timestamp
 		last_commit_timestamp=`date -d "$(git log -1 --format=%cd --date=iso)" +%s`
 		current_timestamp=$(date +%s)
