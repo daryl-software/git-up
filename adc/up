@@ -759,8 +759,9 @@ EOF
 		error "WTF ? gitdir not found [$gitdir]"
 		exit 14
 	fi
+	user_whitelist="joel florian ludovic gauthier"
 	# The grep git branch stuff is to make sure the commit we want to git up
-	if [ "$stage" = "prod" ] && [ $( get_user ) != "joel" ] && grep -qE 'pay|cpg' <<< "$repo" && git branch  --contains $sync_to | grep -q -v "master"
+	if [ "$stage" = "prod" ] &&  echo $user_whitelist | grep -vq  $( get_user ) && grep -qE 'pay|cpg' <<< "$repo" && git branch  --contains $sync_to | grep -q -v "master"
 	then
 		# Force git up on pay to be done during working hours
 		current_time=$(date +"%H:%M")
