@@ -769,7 +769,7 @@ EOF
 		pm_start_time="13:00"
 		pm_end_time="17:30"
 		if { [[ "$current_time" < "$am_start_time" ]] || [[ "$current_time" > "$am_end_time" && "$current_time" < "$pm_start_time" ]] || [[ "$current_time" > "$pm_end_time" ]]; }; then
-			echo "Git up prod should be done between 09:30 and 11:30 or between 13:00 and 17:30."
+			echo "Git up prod should be done between 08:30 and 11:30 or between 13:00 and 17:30."
 			exit 43
 		fi
 		# Checking if there was a recent commit by comparing timestamp
