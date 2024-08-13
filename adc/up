@@ -760,8 +760,8 @@ EOF
 		exit 14
 	fi
 	user_whitelist="joel florian ludovic gauthier"
-	# The grep git branch stuff is to make sure the commit we want to git up
-	if [ "$stage" = "prod" ] &&  echo $user_whitelist | grep -vq  $( get_user ) && grep -qE 'pay|cpg' <<< "$repo" && git branch  --contains $sync_to | grep -q -v "master"
+	# Here we check if we are upping pay or cpg in prod if we are then we have some restrictions 
+	if [ "$stage" = "prod" ] &&  echo $user_whitelist | grep -vq  $( get_user ) && grep -qE 'pay|cpg' <<< "$repo"
 	then
 		# Force git up on pay to be done during working hours
 		current_time=$(date +"%H:%M")
@@ -769,16 +769,18 @@ EOF
 		am_end_time="11:30"
 		pm_start_time="13:00"
 		pm_end_time="17:30"
-		if { [[ "$current_time" < "$am_start_time" ]] || [[ "$current_time" > "$am_end_time" && "$current_time" < "$pm_start_time" ]] || [[ "$current_time" > "$pm_end_time" ]]; }; then
+		if { [[ "$current_time" < "$am_start_time" ]] || [[ "$current_time" > "$am_end_time" && "$current_time" < "$pm_start_time" ]] || [[ "$current_time" > "$pm_end_time" ]]; }; 
+		then
 			echo "Git up prod should be done between 08:30 and 11:30 or between 13:00 and 17:30."
 			exit 43
 		fi
-		# Checking if there was a recent commit by comparing timestamp
+
 		last_commit_timestamp=`date -d "$(git log -1 --format=%cd --date=iso)" +%s`
 		current_timestamp=$(date +%s)
 		time_difference=$((current_timestamp - last_commit_timestamp))
-		# This is to by pass the "not deploying" outside of master if a commit was merged recently
-		if  [ $time_difference -gt 300 ]; then
+		# The grep git branch stuff is to make sure the commit we want to git up
+		if git branch  --contains $sync_to | grep -q -v "master" && [ $time_difference -gt 300 ];
+		then
 			echo "Cannot git up $sync_to since the commit is not in the master branch of pay"
 			exit 42
 		fi
