@@ -152,7 +152,7 @@ hook() {
 				if [ -x "$hookscript" ]
 				then
 					debug "Call hook: $hookscript $stage $repo $gitdir $@"
-					$hookscript $stage $repo $gitdir $@ || exit $?
+					$hookscript $stage $repo $gitdir "$@" || exit $?
 				else
 					debug "hook $hookname => '$hookscript' : script not found."
 				fi
@@ -173,7 +173,7 @@ local_hook() {
 			then
 				debug "Call hook: $hook"
 				# Call it inside a subshell
-				( cd "$gitdir" && $local_hooks_dir/$hook $stage $repo $@ )
+				( cd "$gitdir" && $local_hooks_dir/$hook $stage $repo "$@" )
 			else
 				debug "hook $1 => '$local_hooks_dir/$hook' : script not found."
 			fi
@@ -869,8 +869,8 @@ EOF
 		exit 32
 	fi
 
-	hook "pre_deploy" $before $after $( get_user )
-	local_hook "pre-deploy" $before $after $( get_user ) $sync_to
+	hook "pre_deploy" $before $after $( get_user ) "$deploymsg"
+	local_hook "pre-deploy" $before $after $( get_user ) $sync_to "$deploymsg"
 
 	if [ -z "$master" ]
 	then
