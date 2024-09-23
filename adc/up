@@ -760,7 +760,7 @@ EOF
 		exit 14
 	fi
 	user_whitelist="joel florian ludovic gauthier"
-	# Here we check if we are upping pay or cpg in prod if we are then we have some restrictions 
+	# Here we check if we are upping pay or cpg in prod if we are then we have some restrictions
 	if [ "$stage" = "prod" ] &&  echo $user_whitelist | grep -vq  $( get_user ) && grep -qE 'pay|cpg' <<< "$repo"
 	then
 		# Force git up on pay to be done during working hours
@@ -769,7 +769,7 @@ EOF
 		am_end_time="11:30"
 		pm_start_time="13:00"
 		pm_end_time="17:30"
-		if { [[ "$current_time" < "$am_start_time" ]] || [[ "$current_time" > "$am_end_time" && "$current_time" < "$pm_start_time" ]] || [[ "$current_time" > "$pm_end_time" ]]; }; 
+		if { [[ "$current_time" < "$am_start_time" ]] || [[ "$current_time" > "$am_end_time" && "$current_time" < "$pm_start_time" ]] || [[ "$current_time" > "$pm_end_time" ]]; };
 		then
 			echo "Git up prod should be done between 08:30 and 11:30 or between 13:00 and 17:30."
 			exit 43
@@ -865,6 +865,7 @@ EOF
 
 	if [ ${#deploymsg} -lt $minimum_deploy_message_size ] &&  [ "$stage" = "prod" ]
 	then
+		rm $lockfile
 		echo "Deploy message error\n$deploymsg\nMessage is too short (minimum 20 characters)"
 		exit 32
 	fi
