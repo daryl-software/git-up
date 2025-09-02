@@ -759,7 +759,7 @@ EOF
 		error "WTF ? gitdir not found [$gitdir]"
 		exit 14
 	fi
-	user_whitelist="joel florian ludovic gauthier"
+	user_whitelist="joel florian ludovic robin"
 	# Here we check if we are upping pay or cpg in prod if we are then we have some restrictions
 	if [ "$stage" = "prod" ] &&  echo $user_whitelist | grep -vq  $( get_user ) && grep -qE 'pay|cpg' <<< "$repo"
 	then
@@ -794,6 +794,7 @@ EOF
 	local master=$( get_stage_var master )
 	local servers=$( get_stage_var servers )
 	local mutualized=$( get_stage_var mutualized )
+	local checksum=$( get_stage_var checksum )
 	local use_ssh_agent=$( get_stage_var use_ssh_agent )
 
 	# use inventory script if available
@@ -914,6 +915,13 @@ EOF
 	then
 		sync_cmd="$sync_cmd
 --mutu"
+	fi
+
+	debug "checksum=$checksum"
+	if [ $checksum -gt 0 ]
+	then
+		sync_cmd="$sync_cmd
+--checksum"
 	fi
 
 	if [ -n "$servers" ]

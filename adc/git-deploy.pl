@@ -72,6 +72,7 @@ my $progress_i = 0;
 my @progresschars = qw(| / - \\);
 my $deploymode = 0;
 my $mutu = 0;
+my $checksum = 0;
 my $minrev = 0;
 my $before_cid = 'unknown_before';
 my $after_cid = '';
@@ -806,6 +807,7 @@ GetOptions (
 	"quick" => \$quick,
 	"deploy" => \$deploymode,
 	"mutu" => \$mutu,
+	"checksum" => \$checksum,
 	"repo=s" => \$repo,
 	"stage=s" => \$stage,
 	"source-dir=s" => \$sourcedir,
@@ -839,6 +841,10 @@ foreach my $var2check ($stage, $sourcedir, $rsync_module, $rsync_user)
 if ($opt_dryrun)
 {
 	$default_rsync_opts = "--dry-run $default_rsync_opts";
+}
+if ($checksum)
+{
+	$default_rsync_opts = "--checksum $default_rsync_opts";
 }
 #if ($debug)
 #{
