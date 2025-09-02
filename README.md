@@ -124,7 +124,7 @@ Installation
 
 or if you want to install it to another folder:
 
-`curl -sSL https://raw.githubusercontent.com/daryl-software.com/git-up/master/bin/setup | sh -s -- --install-dir ~/.git-up`
+`curl -sSL https://raw.githubusercontent.com/daryl-software/git-up/master/bin/setup | sh -s -- --install-dir ~/.git-up`
 
 It will setup `git up` alias, and download scripts to your `~/.git-up` folder.
 
@@ -194,7 +194,7 @@ On OSX bash is pretty old (3.2), you need to upgrade it with: `brew install bash
 Login to your gitolite server and :
 ```
 cd ~git
-git clone https://github.com/daryl-software.com/git-up.git
+git clone https://github.com/daryl-software/git-up.git
 
 sed -r 's/^#? ?\$GL_ADC_PATH ?= (.+)/$GL_ADC_PATH = "git-up\/adc";/' .gitolite.rc 
 # OR
