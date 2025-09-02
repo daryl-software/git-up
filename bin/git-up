@@ -29,6 +29,8 @@
 set -e
 shopt -s xpg_echo
 
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 #
 # CONFIG
